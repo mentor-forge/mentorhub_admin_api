@@ -1,0 +1,104 @@
+openapi: 3.0.3
+info:
+  title: Mentor Hub Admin API
+  description: |
+    A Flask + MongoDB API for the Admin service (platform shell).
+
+    ## Authentication
+    All endpoints (except `/metrics`) require JWT authentication via the `Authorization` header:
+    ```
+    Authorization: Bearer <token>
+    ```
+
+    For local development, obtain a JWT from the Developer Edition welcome / IdP flow.
+  version: 0.1.0
+  contact:
+    name: Mentor Forge
+    email: info@agile-learning-institute.com
+  license:
+    name: Apache-2.0
+
+servers:
+  - url: http://localhost:8389
+    description: Local development server
+
+tags:
+  - name: Config
+    description: Configuration endpoints
+  - name: Metrics
+    description: Monitoring endpoints
+
+paths:
+  /api/config:
+    get:
+      tags:
+        - Config
+      summary: Get configuration
+      description: Returns the current configuration as JSON (requires authentication)
+      operationId: getConfig
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  config_items:
+                    type: array
+                    items:
+                      type: object
+                  versions:
+                    type: array
+                    items:
+                      type: object
+                  enumerators:
+                    type: array
+                    items:
+                      type: object
+                  token:
+                    type: object
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /metrics:
+    get:
+      tags:
+        - Metrics
+      summary: Prometheus metrics
+      description: Returns Prometheus-formatted metrics
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Metrics retrieved successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT issued by your identity provider (Developer Edition welcome flow for local dev).
+        Include the token in the Authorization header: `Bearer <token>`
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: Unauthorized
