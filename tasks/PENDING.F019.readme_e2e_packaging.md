@@ -19,7 +19,7 @@ Always read these files before implementation:
 - `test/e2e/e2e_auth.py` — must include `profile_id` and `roles: ["admin"]` for api-utils 1.0.0
 - `../mentorhub/Workshops/admin_journey_issues.md` — out of scope: Customer enrichment, Stripe Checkout/Portal, Cognito AdminCreateUser, Discovery list/dismiss
 
-This is a documentation and verification task. Add tests only for gaps against F011’s endpoint map. Do not invent new endpoints.
+This is a documentation and verification task. Add tests only for gaps against F011’s **SPA** endpoint map plus the F017/F018 listeners. Do not invent new SPA endpoints. Do not add webhook or `/dev` paths to OpenAPI.
 
 **Confirmation greps** (zero hits required except inside `tasks/`):
 
@@ -32,22 +32,23 @@ Credential-minting HTTP routes must remain absent. Routes may mention tokens onl
 
 ## Goals
 
-- `README.md` current-state and project-structure list Setting, Profile, Event, ExternalEvent, Customer consume, webhook ingress, and optional dev register. Pin remains `api-utils==1.0.0`.
+- `README.md` current-state and project-structure list Setting, Event, ExternalEvent list, plus a short **ingress** note that `/webhooks/*` and optional `/dev/register/*` are process listeners **not** in OpenAPI, and that Profile/Customer are provisioned by those listeners (no `/api/profile` or `/api/customer`). Pin remains `api-utils==1.0.0`.
 - `README.md` curl examples cover at least:
   - `GET /api/config`
   - `GET /api/setting` (Bearer `$TOKEN`)
   - `GET /api/external-event` (optional `source`)
-  - `POST /api/webhooks/stripe` (no Bearer; note `STRIPE_WEBHOOK_VERIFY`)
+  - `POST /webhooks/stripe` documented as SRE/provider ingress (no Bearer; note `STRIPE_WEBHOOK_VERIFY`) — not as an SPA operation
 - Token minting for tests uses `test/e2e/e2e_auth.py` / `pipenv run e2e` JWT settings — not an API route.
-- `src/server.py` startup logs list every registered prefix (config, docs, metrics, profile, event, external-event, setting, customer, webhooks, and dev register when enabled).
-- `test/test_server.py` URL assertions match the registered surface; still forbids credential-minting and journey-domain leftovers; still forbids Profile PATCH and Customer POST/PATCH.
+- `src/server.py` startup logs list every registered prefix (config, docs, metrics, event, external-event, setting, webhooks, and dev register when enabled).
+- `test/test_server.py` URL assertions match the registered surface; still forbids credential-minting and journey-domain leftovers; `/api/profile`, `/api/customer`, `/api/webhooks`, ExternalEvent POST, and ExternalEvent by-id are absent.
 - E2E coverage (containerized API, admin JWT from `e2e_auth.py`) for:
   - Setting list / get (empty array is acceptable)
-  - Profile list GET
-  - ExternalEvent get-by-id 404 for an unknown id
-  - Stripe webhook POST records without verify when `STRIPE_WEBHOOK_VERIFY` is false (or 400 on empty body if recording requires JSON — document the chosen assertion)
-  - `/api/dev/register/primary` 404 when `REGISTRATION_DEV_MODE` is off
+  - Event list GET
+  - ExternalEvent list GET (array; optional `source`)
+  - Stripe webhook POST to `/webhooks/stripe` records without verify when `STRIPE_WEBHOOK_VERIFY` is false (or 400 on empty body if recording requires JSON — document the chosen assertion)
+  - `/dev/register/primary` 404 when `REGISTRATION_DEV_MODE` is off
 - `Pipfile` still pins `api-utils==1.0.0`.
+- `docs/openapi.yaml` still has no `/webhooks`, `/dev/register`, `/api/profile`, or `/api/customer` paths.
 
 ## Testing Expectations
 
@@ -61,7 +62,7 @@ Run all commands from this API repository root.
   - `pipenv run container`
   - `pipenv run api`
   - `pipenv run e2e`
-  - `curl -s http://localhost:8389/docs/openapi.yaml` — contains `/api/setting`, `/api/webhooks/stripe`, `/api/external-event`
+  - `curl -s http://localhost:8389/docs/openapi.yaml` — contains `/api/setting` and `/api/external-event`; does **not** contain `/webhooks` or `/api/dev`
 - Record command results in **Execution Notes**.
 
 ## Outputs

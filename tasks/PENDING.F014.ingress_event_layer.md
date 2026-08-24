@@ -2,7 +2,7 @@
 
 **Status:** Pending  
 **Type:** Feature  
-**Depends On:** `F013_profile_event_external_event_routes`  
+**Depends On:** `F013_event_and_external_event_routes`  
 **Description:** Shared ingress service for append-only ExternalEvent and Event writes used by webhook handlers (F017) and identity provisioning (F016). Normalize payload metadata; no domain-specific business logic. Designed so a future EventBridge/SQS bus can replace MongoDB writes without changing consumer contracts.
 
 ## Context
@@ -47,7 +47,7 @@ No HTTP routes in this task.
   - Normalize metadata: `source`, `external_id`, SHA-256 `payload_hash` of the canonical raw body, `normalized_body` as a JSON object suitable for consumers (pass through parsed JSON; do not interpret Stripe/Cognito business fields).
   - Idempotent on `(source, external_id)`: second call returns the original ExternalEvent and does **not** append a second Event.
   - Event `type` is `Config.EVENT_TYPE_EXTERNAL_RECEIVED` unless the caller passes a different allowed type (provisioning will pass `EVENT_TYPE_IDENTITY_PROVISIONED` in F016).
-- Local `EventService` (or IngressService helper) must set Event `context` from explicit refs (`profile_id`, `customer_id`, and other ids the live Event schema allows) when provided, instead of blindly copying the webhook/service token. Operator `POST /api/event` from F013 may keep shared token-as-context behavior.
+- Local `EventService` (or IngressService helper) must set Event `context` from explicit refs (`profile_id`, `customer_id`, and other ids the live Event schema allows) when provided, instead of blindly copying the webhook/service token. Operator `POST /api/event` from F013 may keep shared token-as-context behavior. Do **not** add `POST /api/external-event`; ingress calls `ExternalEventService.create_external_event` directly.
 - No Stripe Checkout, subscription mutation, Customer enrichment, or Profile PATCH.
 - Unit tests mock MongoIO / subclass creates: hash stability, normalize shape, duplicate `external_id` is idempotent, Event context refs are the provisioned ids when supplied.
 

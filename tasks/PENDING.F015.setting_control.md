@@ -19,8 +19,8 @@ Always read these files before implementation:
 - `../mentorhub_api_utils/api_utils/flask_utils/list_request.py` — `parse_list_request`
 - `../mentorhub_api_utils/api_utils/services/rbac.py` — `is_admin`, `build_outbound_match`, `require_outbound`
 - `docs/openapi.yaml` — Setting paths and schema from F011
-- `src/server.py` — register the new blueprint beside Profile / Event / ExternalEvent
-- `src/routes/profile_routes.py` — POST-on-factory pattern to copy for a fully local blueprint (no shared Setting GET factory)
+- `src/server.py` — register the new blueprint beside Event / ExternalEvent
+- `src/routes/event_routes.py` — POST-on-factory pattern to copy for a fully local Setting blueprint (no shared Setting GET factory)
 
 Fetch the live schema:
 

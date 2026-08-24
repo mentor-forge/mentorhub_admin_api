@@ -13,9 +13,9 @@ Always read these files before implementation:
 - `../mentorhub/DeveloperEdition/standards/api_standards.md` — domain APIs must **not** register HTTP routes that mint credentials
 - `tasks/_PLANNING.md`
 - `README.md`
-- `../mentorhub/Research/local_dev_mocks.md` — `POST /api/dev/register/primary` (`email`, `name`, `organization_name`); `POST /api/dev/register/invite` (`customer_id`, `email`, `name`); login.html mints JWT **after** the API returns ids
+- `../mentorhub/Research/local_dev_mocks.md` — register/join body shapes (`email`, `name`, `organization_name` / `customer_id`); login.html mints JWT **after** the API returns ids. Path prefix in this repo is `/dev/register` (outside `/api`), not `/api/dev/register`.
 - `../mentorhub/Workshops/admin_journey_issues.md` — additional members are invited by the org; AdminCreateUser stays on Customer API; Admin only provisions a Profile under `customer_id`
-- `docs/openapi.yaml` — F011 dev paths
+- `docs/openapi.yaml` — F011 SPA contract; **do not** add login.html register paths
 - `src/services/identity_provisioning_service.py`
 - `src/server.py`
 - `test/test_server.py` — existing forbidden credential-issuer path must remain 404
@@ -31,10 +31,10 @@ Invite does **not** send email and does **not** call Cognito AdminCreateUser.
 
 ## Goals
 
-- `src/routes/dev_register_routes.py` — `POST /primary` and `POST /invite` under prefix `/api/dev/register` (paths must match OpenAPI). HTTP-only; pass JSON to `IdentityProvisioningService`.
+- `src/routes/dev_register_routes.py` — `POST /primary` and `POST /invite` under prefix `/dev/register` (not under `/api`; login.html is not the Admin SPA). HTTP-only; pass JSON to `IdentityProvisioningService`. Do **not** add these paths to `docs/openapi.yaml`.
 - When `REGISTRATION_DEV_MODE` is off, do not register the blueprint (preferred) or return 404 from the handlers.
 - `src/server.py` registers the blueprint only in dev mode and logs that fact.
-- `test/test_server.py` still asserts the credential-issuer path is absent. Optionally assert `/api/dev/register/primary` is absent when the flag is off (document how the test sets env).
+- `test/test_server.py` still asserts the credential-issuer path is absent. Optionally assert `/dev/register/primary` is absent when the flag is off (document how the test sets env).
 - Route tests: primary returns Profile + Customer without a token field; invite does not create a Customer; disabled mode 404; duplicate primary is idempotent via the service.
 
 ## Testing Expectations
@@ -49,7 +49,8 @@ Run all commands from this API repository root.
 - **Packaging verification**
   - `pipenv run container`
   - `pipenv run api`
-  - Confirm `/api/dev/register/primary` is 404 in the default container env unless compose sets `REGISTRATION_DEV_MODE` (record the observed behavior in Execution Notes)
+  - Confirm `/dev/register/primary` is 404 in the default container env unless compose sets `REGISTRATION_DEV_MODE` (record the observed behavior in Execution Notes)
+  - `curl -s http://localhost:8389/docs/openapi.yaml` — must **not** contain `/dev/register` or `/api/dev`
 
 ## Outputs
 

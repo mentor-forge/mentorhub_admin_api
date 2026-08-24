@@ -15,12 +15,20 @@ Always read these files before implementation:
 - `README.md`
 - `../mentorhub/Workshops/admin_journey_issues.md` — F-AA01; verify, normalize, provision, record; SMS was listed as a webhook source in the refactor pass but is placeholder-only
 - `../mentorhub/Research/local_dev_mocks.md` — `STRIPE_WEBHOOK_VERIFY=false` locally; stripe-mock posts to Admin ingress
-- `docs/openapi.yaml` — `POST /api/webhooks/stripe`, `/api/webhooks/cognito`, `/api/webhooks/sms`
+- `docs/openapi.yaml` — F011 is the Admin SPA contract only; **do not** add webhook operations to it
 - `src/services/ingress_service.py`
 - `src/services/identity_provisioning_service.py`
 - `src/server.py`
 
-**Auth (locked):** webhook routes do **not** require an operator Bearer JWT with `ROLE_ADMIN`. That would block Stripe and Cognito. After verification, build a synthetic ingress token (`roles` includes `Config.ROLE_ADMIN`, `user_id` e.g. `ingress`) and breadcrumb for service calls.
+**URL space (locked):** these are provider ingress listeners on the Admin API **process**, not BFF `/api` operations. Register:
+
+| Method and path | Caller |
+| --- | --- |
+| `POST /webhooks/stripe` | Stripe / stripe-mock |
+| `POST /webhooks/cognito` | Cognito Post Confirmation (F-S01) |
+| `POST /webhooks/sms` | SMS provider (placeholder) |
+
+Do **not** mount them under `/api`. Do **not** add them to `docs/openapi.yaml` (SPA explorer). Auth is signature / shared secret, not operator JWT.
 
 **Stripe:**
 
@@ -50,9 +58,9 @@ No Stripe SDK requirement unless verification when `STRIPE_WEBHOOK_VERIFY=true` 
 
 - `src/services/webhook_transport.py` — raw body, signature/secret verification helpers, synthetic ingress token/breadcrumb.
 - `src/services/webhook_handlers.py` (or equivalently named module) — `handle_stripe`, `handle_cognito_post_confirmation`, `handle_sms` as event handlers. Handlers call IngressService / IdentityProvisioningService; they do not implement collection I/O themselves.
-- `src/routes/webhook_routes.py` — the three POST paths from OpenAPI; HTTP layer only.
-- `src/server.py` registers `/api/webhooks` (or each path) and logs them. Do not proxy these through a credential-minting path.
-- `test/test_server.py` asserts webhook POSTs exist and credential-minting routes still do not.
+- `src/routes/webhook_routes.py` — `POST /webhooks/stripe`, `/webhooks/cognito`, `/webhooks/sms`; HTTP layer only. After verification, build a synthetic ingress token (`roles` includes `Config.ROLE_ADMIN`, `user_id` e.g. `ingress`) and breadcrumb for service calls.
+- `src/server.py` registers a blueprint at `/webhooks` (not `/api/webhooks`) and logs it. Do not add these paths to `docs/openapi.yaml`.
+- `test/test_server.py` asserts `/webhooks/stripe` (etc.) exist, `/api/webhooks/` does **not**, and credential-minting routes still do not.
 - Unit tests: Stripe verify on/off, duplicate Stripe id idempotent, Cognito calls `provision_primary`, SMS placeholder does not write an illegal `source`, no JWT in responses.
 
 ## Testing Expectations
@@ -69,7 +77,8 @@ Run all commands from this API repository root.
 - **Packaging verification**
   - `pipenv run container`
   - `pipenv run api`
-  - `curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8389/api/webhooks/stripe` — route exists (not 404); exact status may be 400 without a body
+  - `curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8389/webhooks/stripe` — route exists (not 404); exact status may be 400 without a body
+  - `curl -s http://localhost:8389/docs/openapi.yaml` — must **not** contain `/webhooks` or `/api/webhooks`
 
 ## Outputs
 
