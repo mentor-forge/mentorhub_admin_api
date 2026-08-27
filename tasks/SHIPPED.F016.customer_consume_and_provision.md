@@ -1,6 +1,6 @@
 # F016 – Identity provisioning (Profile + Customer services, no HTTP)
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F015_setting_control`  
 **Description:** Local Customer provisioned-create plus the identity provisioning service used by Cognito Post Confirmation and F-W10 dev register. Create minimal Customer (Organization) + Profile in `provisioned` status and record immutable events via IngressService. No Profile, Customer, or webhook HTTP in this task. No Customer enrichment.
@@ -82,3 +82,19 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+1. **Service Implementation:**
+   - Implemented `src/services/customer_service.py` with `get_customer`, `get_by_stripe_customer_id`, `get_by_name`, and `create_provisioned_customer`.
+   - Implemented `src/services/identity_provisioning_service.py` with `provision_primary` and `provision_invitee` with idempotency, owner `customer_id` linking, and IngressService event dispatching.
+   - Updated `src/services/profile_service.py` with `get_by_email` and `get_profile` helpers.
+   - Updated `src/services/__init__.py`.
+2. **Testing:**
+   - Created `test/services/test_customer_service.py` and `test/services/test_identity_provisioning_service.py`.
+   - Updated `test/services/test_profile_service.py`.
+   - `pipenv run test`: All 56 tests passed.
+   - `pipenv run lint`: Black formatting check clean.
+   - `pipenv run build`: Clean compilation.
+3. **Packaging Verification:**
+   - `pipenv run container`: Docker image built.
+   - `pipenv run api`: Container restarted.
+   - Verified live API and confirmed `/api/customer` and `/api/profile` routes remain absent from OpenAPI surface.

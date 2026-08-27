@@ -5,7 +5,7 @@ Unit tests for ProfileService subclass in Admin API.
 import pytest
 from unittest.mock import patch, MagicMock
 from bson import ObjectId
-from api_utils.flask_utils.exceptions import HTTPForbidden
+from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound
 from src.services.profile_service import ProfileService
 
 
@@ -71,3 +71,41 @@ def test_create_profile_forbidden_for_non_admin(non_admin_token, breadcrumb):
     with pytest.raises(HTTPForbidden) as exc_info:
         ProfileService.create_profile(data, non_admin_token, breadcrumb)
     assert "Admin role required" in str(exc_info.value.message)
+
+
+@patch("src.services.profile_service.MongoIO.get_instance")
+@patch("src.services.profile_service.Config.get_instance")
+def test_get_by_email(mock_config, mock_mongo):
+    mock_config_instance = MagicMock()
+    mock_config_instance.PROFILE_COLLECTION_NAME = "Profile"
+    mock_config.return_value = mock_config_instance
+
+    mock_mongo_instance = MagicMock()
+    mock_mongo_instance.get_documents.return_value = [
+        {"_id": ObjectId("507f1f77bcf86cd799439011"), "email": "test@example.com"}
+    ]
+    mock_mongo.return_value = mock_mongo_instance
+
+    result = ProfileService.get_by_email("test@example.com")
+    assert result["email"] == "test@example.com"
+
+
+@patch("src.services.profile_service.MongoIO.get_instance")
+@patch("src.services.profile_service.Config.get_instance")
+def test_get_profile(mock_config, mock_mongo, admin_token, breadcrumb):
+    mock_config_instance = MagicMock()
+    mock_config_instance.PROFILE_COLLECTION_NAME = "Profile"
+    mock_config_instance.ROLE_ADMIN = "admin"
+    mock_config.return_value = mock_config_instance
+
+    mock_mongo_instance = MagicMock()
+    mock_mongo_instance.get_document.return_value = {
+        "_id": ObjectId("507f1f77bcf86cd799439011"),
+        "name": "test-user",
+    }
+    mock_mongo.return_value = mock_mongo_instance
+
+    result = ProfileService.get_profile(
+        "507f1f77bcf86cd799439011", admin_token, breadcrumb
+    )
+    assert result["name"] == "test-user"
