@@ -3,7 +3,7 @@
 ## Current State
 Guidance for LLM Code Assistants - NOTE: We are currently pre-release. At this time, no changes should consider backward compatibility. Likewise, while we anticipate versioning releases in the future at this point, no consideration should be given to bumping any versions beyond managing the internal api_utils spa_utils dependencies. We are in a rapid iteration phase where features can be deprecated and removed without pause. When working in this repo we should keep our eyes out for potential re-usable code that could be migrated to api_utils. This code should be implemented locally, and issues opened in the api_utils repo when it is time to migrate code.
 
-Platform shell only (`/api/config`, `/docs`, `/metrics`). Admin domain routes (Stripe, Cognito ingress, etc.) will be added in follow-on tasks.
+Platform shell only (`/api/config`, `/docs`, `/metrics`). Pinned to `api-utils==1.0.0` (JSON-array list GETs, `offset`/`size` request headers, no cursor envelope). Admin domain routes (Setting control, Event/ExternalEvent list, Stripe and Cognito ingress, etc.) will be added in follow-on tasks.
 
 ## Prerequisites
 - Mentor Hub [Developers Edition](https://github.com/mentor-forge/mentorhub/blob/main/CONTRIBUTING.md)

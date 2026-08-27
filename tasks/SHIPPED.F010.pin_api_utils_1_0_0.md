@@ -1,6 +1,6 @@
 # F010 – Pin api-utils 1.0.0
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** none  
 **Description:** This repo owns the 1.0.0 wave pin. Bump `api-utils` from `0.5.2` to `1.0.0` and keep the platform shell (config, metrics, explorer) importing cleanly. No domain routes or services in this task.
@@ -59,3 +59,17 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+1. **Plan & Dependency Bump:**
+   - Updated `Pipfile` to specify `api-utils = {version = "==1.0.0", index = "codeartifact"}`.
+   - Ran `sh scripts/pipenv-lock.sh` to refresh `Pipfile.lock` against AWS CodeArtifact.
+   - Installed dependencies with `pipenv run install` (installed `api-utils-1.0.0`).
+   - Updated `README.md` to describe the pinned `api-utils==1.0.0` contract.
+2. **Testing & Packaging Verification:**
+   - `pipenv run test`: All 13 unit tests passed.
+   - `pipenv run lint`: Black check clean.
+   - `pipenv run build`: Python compilation clean.
+   - `pipenv run container`: Docker image `ghcr.io/mentor-forge/mentorhub_admin_api:latest` built successfully.
+   - `pipenv run api`: Containers started and verified healthy.
+   - `curl -s http://localhost:8389/docs/openapi.yaml`: Responded 200 OK with platform shell OpenAPI.
+   - `curl -s http://localhost:8389/metrics`: Responded with Prometheus metrics.
