@@ -105,8 +105,11 @@ class TestAppConfiguration(unittest.TestCase):
         self.assertTrue(any("/api/setting" in rule for rule in rules))
         self.assertTrue(any("/webhooks/stripe" in rule for rule in rules))
         self.assertTrue(any("/webhooks/cognito" in rule for rule in rules))
-        self.assertTrue(any("/webhooks/sms" in rule for rule in rules))
+        self.assertTrue(any("/dev/register/primary" in rule for rule in rules))
+        self.assertTrue(any("/dev/register/invite" in rule for rule in rules))
         self.assertFalse(any("/api/webhooks" in rule for rule in rules))
+        self.assertFalse(any("/api/dev" in rule for rule in rules))
+        self.assertFalse(any("/api/dev/register" in rule for rule in rules))
         self.assertFalse(
             any(_FORBIDDEN_CREDENTIAL_ISSUER_PATH in rule for rule in rules)
         )

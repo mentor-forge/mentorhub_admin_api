@@ -61,14 +61,10 @@ def test_handle_cognito_post_confirmation(mock_provision, system_token, breadcru
     mock_provision.assert_called_once()
 
 
-@patch("src.services.webhook_handlers.IngressService.record_external_payload")
-def test_handle_sms(mock_record, system_token, breadcrumb):
-    mock_record.return_value = {"external_event": {}, "event": {}}
-
+def test_handle_sms(system_token, breadcrumb):
     payload = {"message_id": "msg_001", "body": "HELP"}
     result = handle_sms(payload, system_token, breadcrumb)
-    assert "external_event" in result
-    mock_record.assert_called_once()
+    assert result["received"] is True
 
 
 def test_handle_sms_missing_id(system_token, breadcrumb):

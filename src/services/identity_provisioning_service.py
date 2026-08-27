@@ -18,6 +18,8 @@ from src.services.profile_service import ProfileService
 
 logger = logging.getLogger(__name__)
 
+ALLOWED_ROLES = {"admin", "coordinator", "customer", "mentee", "mentor"}
+
 
 class IdentityProvisioningService:
     """
@@ -90,14 +92,27 @@ class IdentityProvisioningService:
             )
 
             # 2. Create paired primary Profile
-            profile_roles = roles or ["admin", "member"]
+            if roles:
+                filtered_roles = [r for r in roles if r in ALLOWED_ROLES]
+            else:
+                filtered_roles = ["admin"]
+            if not filtered_roles:
+                filtered_roles = ["admin"]
+
+            # Derive username from email (no whitespace, max 40)
+            username = email.split("@")[0].replace(" ", "_")[:40]
             profile_data = {
                 "email": email,
-                "name": name or email.split("@")[0].replace(".", " ").title(),
-                "roles": profile_roles,
+                "name": username,
+                "roles": filtered_roles,
                 "customer_id": customer_doc["_id"],
                 "status": "provisioned",
             }
+            if name:
+                profile_data["full_name"] = str(name)[:255]
+            if external_ids and "sub" in external_ids:
+                profile_data["cognito_sub"] = str(external_ids["sub"])[:40]
+
             created_profile = ProfileService.create_profile(
                 profile_data, token, breadcrumb
             )
@@ -200,14 +215,26 @@ class IdentityProvisioningService:
         config = Config.get_instance()
 
         try:
-            profile_roles = roles or ["member"]
+            if roles:
+                filtered_roles = [r for r in roles if r in ALLOWED_ROLES]
+            else:
+                filtered_roles = ["mentee"]
+            if not filtered_roles:
+                filtered_roles = ["mentee"]
+
+            username = email.split("@")[0].replace(" ", "_")[:40]
             profile_data = {
                 "email": email,
-                "name": name or email.split("@")[0].replace(".", " ").title(),
-                "roles": profile_roles,
+                "name": username,
+                "roles": filtered_roles,
                 "customer_id": ObjectId(str(customer_id)),
                 "status": "provisioned",
             }
+            if name:
+                profile_data["full_name"] = str(name)[:255]
+            if external_ids and "sub" in external_ids:
+                profile_data["cognito_sub"] = str(external_ids["sub"])[:40]
+
             created_profile = ProfileService.create_profile(
                 profile_data, token, breadcrumb
             )

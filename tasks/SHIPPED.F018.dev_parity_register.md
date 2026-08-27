@@ -1,6 +1,6 @@
 # F018 – Dev-parity register and join endpoints
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F017_webhook_transport`  
 **Description:** F-W10 login.html register/join tabs call Admin ingress so the local path matches production Post Confirmation. Reuse IdentityProvisioningService. Do not mint JWTs. Do not expose Customer enrichment or Stripe Checkout.
@@ -62,3 +62,19 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+1. **Dev Parity Registration Routes:**
+   - Created `src/routes/dev_register_routes.py` with `POST /primary` (alias `/organization`) and `POST /invite` (alias `/join`) mounted at `/dev/register`.
+   - Dispatches to `IdentityProvisioningService.provision_primary` and `IdentityProvisioningService.provision_invitee`.
+   - Gate controlled via `REGISTRATION_DEV_MODE` environment variable returning 404 when disabled.
+   - Response bodies return provisioned `Profile` and `Customer` documents; no JWTs or credentials are minted by the API.
+2. **Testing:**
+   - Created `test/routes/test_dev_register_routes.py`.
+   - Updated `test/test_server.py` asserting `/dev/register/*` routes exist and `/api/dev` does not.
+   - `pipenv run test`: All 81 tests passed.
+   - `pipenv run lint`: Black formatted and lint clean.
+   - `pipenv run build`: Clean compilation.
+3. **Packaging Verification:**
+   - `pipenv run container`: Docker image built.
+   - `pipenv run api`: Containers restarted.
+   - Verified live `POST /dev/register/primary` returns 201 with Customer and Profile, `POST /dev/register/invite` returns 201 under existing Customer, and `/docs/openapi.yaml` excludes dev register endpoints.

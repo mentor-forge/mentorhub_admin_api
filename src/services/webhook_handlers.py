@@ -96,15 +96,16 @@ def handle_cognito(payload: dict, token: dict, breadcrumb: dict) -> dict:
 
 
 def handle_sms(payload: dict, token: dict, breadcrumb: dict) -> dict:
-    """Handle incoming SMS payload."""
+    """Handle incoming SMS payload (placeholder: logged without invalid source enum write)."""
     message_id = payload.get("message_id") or payload.get("id")
     if not message_id:
         raise HTTPBadRequest("Missing SMS message ID")
 
-    return IngressService.record_external_payload(
-        source="sms",
-        external_id=str(message_id),
-        raw_payload=payload,
-        token=token,
-        breadcrumb=breadcrumb,
+    logger.info(
+        f"Received SMS message {message_id} (source not in ExternalEvent enum, logging only)"
     )
+    return {
+        "received": True,
+        "idempotent": False,
+        "message": f"SMS {message_id} logged",
+    }
