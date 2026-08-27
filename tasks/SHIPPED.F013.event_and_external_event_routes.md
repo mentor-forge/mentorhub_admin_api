@@ -1,6 +1,6 @@
 # F013 – Event and ExternalEvent list routes
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F012_shared_service_subclasses`  
 **Description:** Mount Event GET list + POST, and Admin ExternalEvent **list only** (source filter). No Profile or Customer routes. No ExternalEvent POST or get-by-id. Register blueprints from `server.py`.
@@ -68,3 +68,22 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+1. **Route & Service Implementation:**
+   - Updated `src/services/external_event_service.py` with `get_external_events` and list query/filter specifications (`source` in_list, order by `created.at_time` desc).
+   - Created `src/routes/event_routes.py` with `GET ""` list (via factory) and `POST ""` create (201).
+   - Created `src/routes/external_event_routes.py` with list-only `GET ""` (200 JSON array).
+   - Created `src/routes/__init__.py`.
+   - Registered `/api/event` and `/api/external-event` in `src/server.py` and updated logging.
+   - Created `test/e2e/e2e_auth.py` for minting test JWTs with `profile_id` and `roles: ["admin"]`.
+2. **Testing:**
+   - Created `test/routes/test_event_routes.py` and `test/routes/test_external_event_routes.py`.
+   - Updated `test/test_server.py` with URL mapping assertions.
+   - Updated `test/services/test_external_event_service.py` with list query tests.
+   - `pipenv run test`: All 29 tests passed.
+   - `pipenv run lint`: Black formatting check clean.
+   - `pipenv run build`: Clean compilation.
+3. **Packaging Verification:**
+   - `pipenv run container`: Docker image built.
+   - `pipenv run api`: API container restarted.
+   - Verified live HTTP calls against `http://localhost:8389/api/event` and `http://localhost:8389/api/external-event` returning status 200 with JSON arrays.

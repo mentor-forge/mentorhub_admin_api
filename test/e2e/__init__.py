@@ -1,1 +1,3 @@
-# E2E tests package
+"""
+E2E test package.
+"""
