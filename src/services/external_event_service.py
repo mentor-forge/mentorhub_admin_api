@@ -2,7 +2,7 @@
 Local ExternalEventService subclass for Mentor Hub Admin API.
 """
 
-from api_utils import Config
+from api_utils import Config, MongoIO
 from api_utils.flask_utils.exceptions import HTTPForbidden
 from api_utils.mongo_utils.list_query import (
     DEFAULT_OFFSET,
@@ -41,6 +41,17 @@ class ExternalEventService(SharedExternalEventService):
         """Require ROLE_ADMIN for operations on the ExternalEvent subclass."""
         if not is_admin(token):
             raise HTTPForbidden("Admin role required")
+
+    @classmethod
+    def get_by_source_and_external_id(cls, source, external_id):
+        """Find an existing external event by (source, external_id) for idempotency."""
+        mongo = MongoIO.get_instance()
+        config = Config.get_instance()
+        docs = mongo.get_documents(
+            config.EXTERNAL_EVENT_COLLECTION_NAME,
+            match={"source": source, "external_id": external_id},
+        )
+        return docs[0] if docs else None
 
     @classmethod
     def get_external_events(

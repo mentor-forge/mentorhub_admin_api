@@ -37,8 +37,8 @@ def breadcrumb():
     }
 
 
-@patch("api_utils.services.event_service.MongoIO.get_instance")
-@patch("api_utils.services.event_service.Config.get_instance")
+@patch("src.services.event_service.MongoIO.get_instance")
+@patch("src.services.event_service.Config.get_instance")
 def test_create_event_allowed_for_admin(
     mock_config, mock_mongo, admin_token, breadcrumb
 ):
@@ -57,7 +57,33 @@ def test_create_event_allowed_for_admin(
     assert result["type"] == "login"
     assert result["_id"] == ObjectId("507f1f77bcf86cd799439011")
     assert result["created"] == breadcrumb
+    assert result["context"]["profile_id"] == ObjectId("507f1f77bcf86cd799439011")
+    assert result["context"]["user_id"] == "admin-user"
     mock_mongo_instance.create_document.assert_called_once()
+
+
+@patch("src.services.event_service.MongoIO.get_instance")
+@patch("src.services.event_service.Config.get_instance")
+def test_create_event_with_explicit_context(
+    mock_config, mock_mongo, admin_token, breadcrumb
+):
+    mock_config_instance = MagicMock()
+    mock_config_instance.EVENT_COLLECTION_NAME = "events"
+    mock_config_instance.ROLE_ADMIN = "admin"
+    mock_config.return_value = mock_config_instance
+
+    mock_mongo_instance = MagicMock()
+    mock_mongo_instance.create_document.return_value = "507f1f77bcf86cd799439011"
+    mock_mongo.return_value = mock_mongo_instance
+
+    data = {"type": "identity_provisioned"}
+    explicit_context = {"profile_id": "507f1f77bcf86cd799439099"}
+    result = EventService.create_event(
+        data, admin_token, breadcrumb, context=explicit_context
+    )
+
+    assert result["type"] == "identity_provisioned"
+    assert result["context"]["profile_id"] == ObjectId("507f1f77bcf86cd799439099")
 
 
 def test_create_event_forbidden_for_non_admin(non_admin_token, breadcrumb):

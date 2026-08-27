@@ -1,6 +1,6 @@
 # F014 – Ingress Event + ExternalEvent write layer
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F013_event_and_external_event_routes`  
 **Description:** Shared ingress service for append-only ExternalEvent and Event writes used by webhook handlers (F017) and identity provisioning (F016). Normalize payload metadata; no domain-specific business logic. Designed so a future EventBridge/SQS bus can replace MongoDB writes without changing consumer contracts.
@@ -76,3 +76,18 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+1. **Ingress Service Implementation:**
+   - Implemented `src/services/ingress_service.py` with `record_external_payload`, `compute_payload_hash` (deterministic SHA-256), and `normalize_payload_body`.
+   - Enhanced `src/services/external_event_service.py` with `get_by_source_and_external_id` for idempotency queries.
+   - Overrode `create_event` in `src/services/event_service.py` to allow passing explicit `context` references (e.g., provisioned `profile_id`, `customer_id`).
+2. **Testing:**
+   - Created `test/services/test_ingress_service.py` verifying hash determinism, payload normalization, event recording, and idempotent duplicate handling.
+   - Updated `test/services/test_event_service.py` testing explicit context handling.
+   - `pipenv run test`: All 34 tests passed.
+   - `pipenv run lint`: Black formatting check clean.
+   - `pipenv run build`: Compilation clean.
+3. **Packaging Verification:**
+   - `pipenv run container`: Docker image built.
+   - `pipenv run api`: API container restarted.
+   - Verified `/docs/openapi.yaml` served.
