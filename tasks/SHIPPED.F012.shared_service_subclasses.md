@@ -1,6 +1,6 @@
 # F012 – Profile, Event, and ExternalEvent service subclasses
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F011_openapi_admin_surface`  
 **Description:** Add thin local subclasses so later routes and ingress never import shared service classes directly. Override inbound `_check_permission` so create requires `ROLE_ADMIN`. Profile create is **service-only** (no HTTP). No HTTP routes in this task.
@@ -78,3 +78,18 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+1. **Service Subclasses Implementation:**
+   - Created `src/services/__init__.py` exporting `ProfileService`, `ExternalEventService`, `EventService`.
+   - Implemented `ProfileService`, `ExternalEventService`, and `EventService` subclasses inheriting from `api_utils.services`.
+   - Overrode `_check_permission` on each subclass enforcing `ROLE_ADMIN` (`is_admin(token)`).
+   - Ensured `ProfileService` does not implement `update_profile` / PATCH.
+2. **Unit Tests:**
+   - Created `test/services/test_profile_service.py`, `test/services/test_external_event_service.py`, `test/services/test_event_service.py`.
+   - Verified `ROLE_ADMIN` authorization, forbidden non-admin rejection, and absence of PATCH on ProfileService.
+3. **Verification & Packaging:**
+   - `pipenv run test`: All 20 unit tests passed.
+   - `pipenv run lint`: Black formatting clean.
+   - `pipenv run build`: Compilation clean.
+   - `pipenv run container`: Docker image built.
+   - `pipenv run api`: API container restarted and verified with `curl -s http://localhost:8389/docs/openapi.yaml`.
