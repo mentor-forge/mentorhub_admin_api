@@ -9,6 +9,7 @@ This folder contains coding tasks that an orchestration agent can execute, based
   - In-repo: `README.md`, `docs/openapi.yaml`, `src/...`, `test/...`, `tasks/...`
 
 - **Context** Before creating any task files you should review the following files for context:
+- ../mentorhub/DeveloperEdition/standards/ArchitecturePrinciples.md
 - ../mentorhub/DeveloperEdition/standards/api_standards.md
 - ../mentorhub_api_utils/README.md
 - ./README.md
@@ -77,7 +78,7 @@ Each task file must contain the following sections under H1 and H2 headings.
 
 ## Naming Conventions
 - **Recommended filename pattern**:
-  - `STATUS.LNNN.short_task_name.md` where L is (F)eature or (D)efect, and NNN is a serial task number. When planning, create only PENDING status tasks. 
+  - `STATUS.LNNN.short_task_name.md` where L is (F)eature or (D)efect, and NNN is a serial task number. Increment task numbers by 1. When planning, create only PENDING status tasks. 
   - Examples:
     - `PENDING.D001.example_defect.md`
     - `PENDING.F010.update_profile_openapi.md`

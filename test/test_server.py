@@ -95,21 +95,43 @@ class TestAppConfiguration(unittest.TestCase):
         self.assertNotEqual(response.status_code, 404)
 
     def test_url_map_contains_expected_routes(self):
-        """Test that URL map contains platform shell routes only."""
+        """Test that URL map contains expected routes."""
         rules = [rule.rule for rule in self.app.url_map.iter_rules()]
 
         self.assertTrue(any("/docs" in rule for rule in rules))
         self.assertTrue(any("/api/config" in rule for rule in rules))
+        self.assertTrue(any("/api/event" in rule for rule in rules))
+        self.assertTrue(any("/api/external-event" in rule for rule in rules))
+        self.assertTrue(any("/api/setting" in rule for rule in rules))
+        self.assertTrue(any("/webhooks/stripe" in rule for rule in rules))
+        self.assertTrue(any("/webhooks/cognito" in rule for rule in rules))
+        self.assertTrue(any("/dev/register/primary" in rule for rule in rules))
+        self.assertTrue(any("/dev/register/invite" in rule for rule in rules))
+        self.assertFalse(any("/api/webhooks" in rule for rule in rules))
+        self.assertFalse(any("/api/dev" in rule for rule in rules))
+        self.assertFalse(any("/api/dev/register" in rule for rule in rules))
         self.assertFalse(
             any(_FORBIDDEN_CREDENTIAL_ISSUER_PATH in rule for rule in rules)
         )
         self.assertTrue(any("/metrics" in rule for rule in rules))
+        self.assertFalse(any("/api/profile" in rule for rule in rules))
+        self.assertFalse(any("/api/customer" in rule for rule in rules))
         self.assertFalse(any("/api/journey" in rule for rule in rules))
         self.assertFalse(any("/api/note" in rule for rule in rules))
-        self.assertFalse(any("/api/event" in rule for rule in rules))
         self.assertFalse(any("/api/aggregation" in rule for rule in rules))
         self.assertFalse(any("/api/resource" in rule for rule in rules))
         self.assertFalse(any("/api/path" in rule for rule in rules))
+        self.assertFalse(
+            any("/api/external-event/<" in rule for rule in rules),
+            "ExternalEvent must not register get-by-id",
+        )
+
+    def test_external_event_methods_list_only(self):
+        """ExternalEvent endpoint should only support GET list."""
+        for rule in self.app.url_map.iter_rules():
+            if rule.rule == "/api/external-event":
+                self.assertIn("GET", rule.methods)
+                self.assertNotIn("POST", rule.methods)
 
 
 class TestSignalHandlers(unittest.TestCase):

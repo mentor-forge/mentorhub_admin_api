@@ -35,17 +35,34 @@ app.json = MongoJSONEncoder(app)
 
 # Route registration (all grouped together)
 from api_utils import create_metric_routes, create_config_routes, create_explorer_routes
+from src.routes import (
+    create_dev_register_routes,
+    create_event_routes,
+    create_external_event_routes,
+    create_setting_routes,
+    create_webhook_routes,
+)
 
 # Register route blueprints
 docs_dir = os.path.join(os.path.dirname(__file__), "..", "docs")
 app.register_blueprint(create_explorer_routes(docs_dir), url_prefix="/docs")
 app.register_blueprint(create_config_routes(), url_prefix="/api/config")
+app.register_blueprint(create_event_routes(), url_prefix="/api/event")
+app.register_blueprint(create_external_event_routes(), url_prefix="/api/external-event")
+app.register_blueprint(create_setting_routes(), url_prefix="/api/setting")
+app.register_blueprint(create_webhook_routes(), url_prefix="/webhooks")
+app.register_blueprint(create_dev_register_routes(), url_prefix="/dev/register")
 metrics = create_metric_routes(app)  # This exposes /metrics endpoint
 
 logger.info("============= Routes Registered ===============")
 logger.info("  /api/config - Configuration endpoint")
+logger.info("  /api/event - Event endpoint")
+logger.info("  /api/external-event - External event audit endpoint")
+logger.info("  /api/setting - Setting endpoint")
+logger.info("  /dev/register - Developer Edition registration endpoint")
 logger.info("  /docs - API Explorer")
 logger.info("  /metrics - Prometheus metrics endpoint")
+logger.info("  /webhooks - Provider webhook listener endpoint")
 
 
 # Define a signal handler for SIGTERM and SIGINT
