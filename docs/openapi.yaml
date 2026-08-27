@@ -2,10 +2,13 @@ openapi: 3.0.3
 info:
   title: Mentor Hub Admin API
   description: |
-    A Flask + MongoDB API for the Admin service (platform shell).
+    A Flask + MongoDB API for the Admin service (SPA / operator REST).
+
+    Admin controls ExternalEvent and Setting, creates Event and Profile, and consumes Profile and Customer.
+    Provider webhook listeners and dev-parity endpoints are process-level listeners outside the SPA API surface.
 
     ## Authentication
-    All endpoints (except `/metrics`) require JWT authentication via the `Authorization` header:
+    All endpoints under `/api/*` require JWT authentication with `admin` role via the `Authorization` header:
     ```
     Authorization: Bearer <token>
     ```
@@ -27,6 +30,12 @@ tags:
     description: Configuration endpoints
   - name: Metrics
     description: Monitoring endpoints
+  - name: Event
+    description: Event logging and retrieval endpoints
+  - name: ExternalEvent
+    description: Ingress external event audit endpoints
+  - name: Setting
+    description: Admin control for system catalog and ops settings
 
 paths:
   /api/config:
@@ -66,6 +75,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /metrics:
     get:
@@ -82,6 +97,404 @@ paths:
               schema:
                 type: string
 
+  /api/event:
+    get:
+      tags:
+        - Event
+      summary: List events
+      description: Returns a paginated list of event documents
+      operationId: listEvents
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/offsetHeader'
+        - $ref: '#/components/parameters/sizeHeader'
+        - name: type[in_list]
+          in: query
+          description: Filter events by type (comma-separated or repeated)
+          required: false
+          schema:
+            type: string
+        - name: profile_id
+          in: query
+          description: Narrow event scope to context.profile_id
+          required: false
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+        - name: sort_by
+          in: query
+          description: Field to sort by
+          required: false
+          schema:
+            type: string
+            enum:
+              - type
+              - created.at_time
+            default: created.at_time
+        - name: order
+          in: query
+          description: Sort direction
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+      responses:
+        '200':
+          description: A JSON array of Event documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Event
+      summary: Create event
+      description: Record a new event document (Admin only)
+      operationId: createEvent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventCreate'
+      responses:
+        '201':
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/external-event:
+    get:
+      tags:
+        - ExternalEvent
+      summary: List external ingress events
+      description: Returns a paginated list of external event audit records (Admin only)
+      operationId: listExternalEvents
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/offsetHeader'
+        - $ref: '#/components/parameters/sizeHeader'
+        - name: source
+          in: query
+          description: Filter external events by provider source
+          required: false
+          schema:
+            type: string
+            enum:
+              - cognito
+              - stripe
+        - name: sort_by
+          in: query
+          description: Field to sort by
+          required: false
+          schema:
+            type: string
+            enum:
+              - source
+              - created.at_time
+            default: created.at_time
+        - name: order
+          in: query
+          description: Sort direction
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+      responses:
+        '200':
+          description: A JSON array of ExternalEvent documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExternalEvent'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/setting:
+    get:
+      tags:
+        - Setting
+      summary: List settings
+      description: Returns a paginated list of Setting documents (Admin only)
+      operationId: listSettings
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/offsetHeader'
+        - $ref: '#/components/parameters/sizeHeader'
+        - name: type
+          in: query
+          description: Filter settings by polymorphic variant type
+          required: false
+          schema:
+            type: string
+            enum:
+              - Product
+              - Discount
+        - name: type[in_list]
+          in: query
+          description: Filter settings by multiple variant types
+          required: false
+          schema:
+            type: string
+        - name: sort_by
+          in: query
+          description: Field to sort by
+          required: false
+          schema:
+            type: string
+            enum:
+              - name
+              - type
+              - created.at_time
+            default: name
+        - name: order
+          in: query
+          description: Sort direction
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+      responses:
+        '200':
+          description: A JSON array of Setting documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Setting'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Setting
+      summary: Create setting
+      description: Create a new Product or Discount setting (Admin only)
+      operationId: createSetting
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingCreate'
+      responses:
+        '201':
+          description: Setting created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Setting'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/setting/{setting_id}:
+    get:
+      tags:
+        - Setting
+      summary: Get setting by ID
+      description: Returns a single Setting document by its ObjectId (Admin only)
+      operationId: getSetting
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: setting_id
+          in: path
+          required: true
+          description: 24-character hexadecimal ObjectId of the Setting
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Setting document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Setting'
+        '400':
+          description: Bad request - Invalid ObjectId format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Setting not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - Setting
+      summary: Update setting
+      description: Update mutable fields on a Setting document (Admin only)
+      operationId: updateSetting
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: setting_id
+          in: path
+          required: true
+          description: 24-character hexadecimal ObjectId of the Setting
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingUpdate'
+      responses:
+        '200':
+          description: Updated Setting document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Setting'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Setting not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -92,7 +505,375 @@ components:
         JWT issued by your identity provider (Developer Edition welcome flow for local dev).
         Include the token in the Authorization header: `Bearer <token>`
 
+  parameters:
+    offsetHeader:
+      name: offset
+      in: header
+      required: false
+      description: Zero-based record offset for pagination
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    sizeHeader:
+      name: size
+      in: header
+      required: false
+      description: Maximum number of records to return
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
   schemas:
+    Breadcrumb:
+      type: object
+      description: Tracking breadcrumb for document creation and update audit
+      required:
+        - from_ip
+        - by_user
+        - at_time
+        - correlation_id
+      properties:
+        at_time:
+          type: string
+          format: date-time
+          description: The date-time when this breadcrumb was created
+        by_user:
+          type: string
+          pattern: '^[^\s]{1,40}$'
+          description: The IdP User Name claimed by the JWT
+        correlation_id:
+          type: string
+          pattern: '^[^\s]{1,40}$'
+          description: The logging correlation ID of the transaction
+        from_ip:
+          type: string
+          format: ip
+          description: Http Request remote IP address
+
+    Event:
+      type: object
+      description: A meaningful event in the system.
+      properties:
+        _id:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          description: The unique identifier for the Event.
+        type:
+          type: string
+          description: The event type
+          enum:
+            - advanced
+            - arrived
+            - completed
+            - encounter
+            - external_received
+            - fail
+            - identity_provisioned
+            - invite_accepted
+            - invite_created
+            - link
+            - login
+            - logout
+            - note
+            - notification_created
+            - notification_dismissed
+            - organization_enriched
+            - payment_recorded
+            - profile_redacted
+            - started
+            - subscription_changed
+        context:
+          type: object
+          description: Context, additional properties allowed
+          additionalProperties: true
+          properties:
+            profile_id:
+              type: string
+              pattern: '^[0-9a-fA-F]{24}$'
+              description: Profile associated with the event
+        created:
+          $ref: '#/components/schemas/Breadcrumb'
+
+    EventCreate:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: The event type
+          enum:
+            - advanced
+            - arrived
+            - completed
+            - encounter
+            - external_received
+            - fail
+            - identity_provisioned
+            - invite_accepted
+            - invite_created
+            - link
+            - login
+            - logout
+            - note
+            - notification_created
+            - notification_dismissed
+            - organization_enriched
+            - payment_recorded
+            - profile_redacted
+            - started
+            - subscription_changed
+
+    ExternalEvent:
+      type: object
+      description: Append-only ingress record of a verified external webhook or provider message.
+      properties:
+        _id:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          description: The unique identifier for the ExternalEvent.
+        source:
+          type: string
+          description: Provider that emitted the ingress payload
+          enum:
+            - cognito
+            - stripe
+        external_id:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+          description: Provider event or message id used for ingress idempotency
+        payload_hash:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+          description: Hash of the verified raw payload
+        normalized_body:
+          type: object
+          description: Normalized ingress payload; additional properties allowed
+          additionalProperties: true
+        created:
+          $ref: '#/components/schemas/Breadcrumb'
+
+    ProductSetting:
+      type: object
+      description: Product catalog / plan picker row (Stripe Checkout price mapping)
+      required:
+        - type
+      properties:
+        _id:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          description: The unique identifier for the Product setting
+        type:
+          type: string
+          description: Discriminator — Product setting variant
+          enum:
+            - Product
+        subscription:
+          type: string
+          pattern: '^[^\s]{1,40}$'
+          description: Immutable plan identifier key for the offering
+        name:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+          description: Display name for the product / plan
+        description:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+          description: Short description of the product offering
+        unit_price:
+          type: number
+          minimum: 0
+          description: Unit price in integer minor units
+        minimum_members:
+          type: number
+          minimum: 0
+          description: Floor for cart quantity / seat validation
+        stripe_price_id:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+          description: Stripe Price id for Checkout line_items[].price
+        status:
+          type: string
+          description: Soft-delete / catalog visibility status
+          enum:
+            - active
+            - archived
+        created:
+          $ref: '#/components/schemas/Breadcrumb'
+        saved:
+          $ref: '#/components/schemas/Breadcrumb'
+
+    DiscountSetting:
+      type: object
+      description: Discount code granting free encounters at checkout
+      required:
+        - type
+      properties:
+        _id:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          description: The unique identifier for the Discount setting
+        type:
+          type: string
+          description: Discriminator — Discount setting variant
+          enum:
+            - Discount
+        code:
+          type: string
+          pattern: '^[^\s]{1,40}$'
+          description: Redeemable code
+        name:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+          description: Short searchable label for the discount
+        description:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+          description: Ops label
+        free_encounters:
+          type: number
+          minimum: 0
+          description: Encounters granted when code is applied at checkout
+        max_redemptions:
+          type: number
+          minimum: 0
+          description: Optional global redemption cap
+        expires_at:
+          type: string
+          format: date-time
+          description: Optional expiry timestamp
+        status:
+          type: string
+          description: Whether the code accepts redemptions
+          enum:
+            - active
+            - inactive
+        created:
+          $ref: '#/components/schemas/Breadcrumb'
+        saved:
+          $ref: '#/components/schemas/Breadcrumb'
+
+    Setting:
+      description: Polymorphic Setting document (Product or Discount variant)
+      oneOf:
+        - $ref: '#/components/schemas/ProductSetting'
+        - $ref: '#/components/schemas/DiscountSetting'
+
+    ProductSettingCreate:
+      type: object
+      required:
+        - type
+        - subscription
+        - name
+      properties:
+        type:
+          type: string
+          enum:
+            - Product
+        subscription:
+          type: string
+          pattern: '^[^\s]{1,40}$'
+        name:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+        description:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+        unit_price:
+          type: number
+          minimum: 0
+        minimum_members:
+          type: number
+          minimum: 0
+        stripe_price_id:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+        status:
+          type: string
+          enum:
+            - active
+            - archived
+          default: active
+
+    DiscountSettingCreate:
+      type: object
+      required:
+        - type
+        - code
+        - name
+      properties:
+        type:
+          type: string
+          enum:
+            - Discount
+        code:
+          type: string
+          pattern: '^[^\s]{1,40}$'
+        name:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+        description:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+        free_encounters:
+          type: number
+          minimum: 0
+        max_redemptions:
+          type: number
+          minimum: 0
+        expires_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+          default: active
+
+    SettingCreate:
+      description: Request payload for creating a Setting document
+      oneOf:
+        - $ref: '#/components/schemas/ProductSettingCreate'
+        - $ref: '#/components/schemas/DiscountSettingCreate'
+
+    SettingUpdate:
+      type: object
+      description: Request payload for updating mutable Setting fields
+      properties:
+        name:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+        description:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+        unit_price:
+          type: number
+          minimum: 0
+        minimum_members:
+          type: number
+          minimum: 0
+        stripe_price_id:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+        code:
+          type: string
+          pattern: '^[^\s]{1,40}$'
+        free_encounters:
+          type: number
+          minimum: 0
+        max_redemptions:
+          type: number
+          minimum: 0
+        expires_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+
     Error:
       type: object
       required:

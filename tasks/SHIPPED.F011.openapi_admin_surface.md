@@ -1,6 +1,6 @@
 # F011 – OpenAPI for Admin SPA operator REST
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F010_pin_api_utils_1_0_0`  
 **Description:** Replace the platform-shell OpenAPI with the Admin **SPA / operator REST** contract: Setting control, Event list/create, and ExternalEvent list. Component schemas come from the running configurator. No Python route implementation in this task. Webhook and login.html register listeners are **not** part of this spec. Profile and Customer have **no** HTTP surface (ingress provisions them via services).
@@ -99,3 +99,23 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+1. **Schema Fetch from Configurator:**
+   - Fetched `Event.yaml/latest/`: Event type enum (20 values), `context.profile_id`, breadcrumb.
+   - Fetched `ExternalEvent.yaml/latest/`: `source` (cognito, stripe), `external_id`, `payload_hash`, `normalized_body`, breadcrumb.
+   - Fetched `Setting.yaml/latest/`: Polymorphic `Product` (subscription, unit_price, minimum_members, stripe_price_id, status) and `Discount` (code, free_encounters, max_redemptions, expires_at, status) variants.
+2. **OpenAPI Spec Update:**
+   - Updated `docs/openapi.yaml` with the Admin SPA operator REST surface:
+     - `GET /api/config`, `GET /metrics`
+     - `GET /api/event`, `POST /api/event`
+     - `GET /api/external-event`
+     - `GET /api/setting`, `POST /api/setting`, `GET /api/setting/{setting_id}`, `PATCH /api/setting/{setting_id}`
+   - Configured `offset`/`size` request headers and JSON-array responses for all list endpoints.
+   - Verified absence of `/webhooks`, `/api/webhooks`, `/dev`, `/api/profile`, `/api/customer`, `POST /api/external-event`, `GET /api/external-event/{id}`.
+3. **Verification & Packaging:**
+   - `python3 -c "import yaml; yaml.safe_load(open('docs/openapi.yaml'))"`: Valid YAML.
+   - `pipenv run test`: All 13 tests passed.
+   - `pipenv run lint`: Black clean.
+   - `pipenv run build`: Compilation clean.
+   - `pipenv run container`: Docker image built.
+   - `pipenv run api`: Service running; verified `/docs/openapi.yaml` serves expected routes.
