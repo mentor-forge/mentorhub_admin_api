@@ -1,6 +1,6 @@
 # F017 – Webhook transport and Stripe / Cognito / SMS handlers
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F016_customer_consume_and_provision`  
 **Description:** HTTP ingress for Stripe, Cognito Post Confirmation, and SMS. Verify signatures, normalize via IngressService, and provision identities on Cognito Post Confirmation. SMS is a transport placeholder. No Customer enrichment, Stripe Checkout, or business workflow.
@@ -94,3 +94,19 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+1. **Webhook Transport & Handlers Implementation:**
+   - Created `src/services/webhook_transport.py` with HMAC-SHA256 signature verification for Stripe (`Stripe-Signature`), transport secret checking for Cognito and SMS, and synthetic admin ingress token generation.
+   - Created `src/services/webhook_handlers.py` with `handle_stripe`, `handle_cognito`, and `handle_sms` dispatching to `IngressService` and `IdentityProvisioningService`.
+   - Created `src/routes/webhook_routes.py` mounting `POST /webhooks/stripe`, `POST /webhooks/cognito`, and `POST /webhooks/sms`.
+   - Registered `/webhooks` blueprint in `src/server.py` and updated logging.
+2. **Testing:**
+   - Created `test/services/test_webhook_transport.py`, `test/services/test_webhook_handlers.py`, and `test/routes/test_webhook_routes.py`.
+   - Updated `test/test_server.py` with assertions for `/webhooks` endpoints and absence of `/api/webhooks`.
+   - `pipenv run test`: All 76 tests passed.
+   - `pipenv run lint`: Clean black formatting check.
+   - `pipenv run build`: Clean compilation.
+3. **Packaging Verification:**
+   - `pipenv run container`: Docker image built.
+   - `pipenv run api`: Containers restarted.
+   - Verified live `POST /webhooks/stripe` returns 200 with idempotent tracking, and `/docs/openapi.yaml` excludes webhook routes.

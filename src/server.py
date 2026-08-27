@@ -39,6 +39,7 @@ from src.routes import (
     create_event_routes,
     create_external_event_routes,
     create_setting_routes,
+    create_webhook_routes,
 )
 
 # Register route blueprints
@@ -48,6 +49,7 @@ app.register_blueprint(create_config_routes(), url_prefix="/api/config")
 app.register_blueprint(create_event_routes(), url_prefix="/api/event")
 app.register_blueprint(create_external_event_routes(), url_prefix="/api/external-event")
 app.register_blueprint(create_setting_routes(), url_prefix="/api/setting")
+app.register_blueprint(create_webhook_routes(), url_prefix="/webhooks")
 metrics = create_metric_routes(app)  # This exposes /metrics endpoint
 
 logger.info("============= Routes Registered ===============")
@@ -57,6 +59,7 @@ logger.info("  /api/external-event - External event audit endpoint")
 logger.info("  /api/setting - Setting endpoint")
 logger.info("  /docs - API Explorer")
 logger.info("  /metrics - Prometheus metrics endpoint")
+logger.info("  /webhooks - Provider webhook listener endpoint")
 
 
 # Define a signal handler for SIGTERM and SIGINT
