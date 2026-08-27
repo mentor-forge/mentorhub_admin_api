@@ -12,7 +12,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-ID_PROPERTIES = ["_id", "profile_id", "resource_id", "journey_id", "customer_id"]
+ID_PROPERTIES = ["_id", "profile_id", "resource_id", "journey_id"]
 DATE_PROPERTIES = []
 
 
@@ -57,6 +57,12 @@ class EventService(SharedEventService):
                 event_data["context"] = dict(event_data["context"])
             else:
                 event_data["context"] = dict(token)
+
+            # Clean empty or None ID fields in context so encode_document doesn't fail
+            if isinstance(event_data.get("context"), dict):
+                for k, v in list(event_data["context"].items()):
+                    if v == "" or v is None:
+                        event_data["context"].pop(k)
 
             encode_document(event_data, ID_PROPERTIES, DATE_PROPERTIES)
             event_data["created"] = breadcrumb

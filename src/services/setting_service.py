@@ -182,7 +182,9 @@ class SettingService:
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
             updated_doc = mongo.update_document(
-                config.SETTING_COLLECTION_NAME, setting_id, update_data
+                config.SETTING_COLLECTION_NAME,
+                document_id=setting_id,
+                set_data=update_data,
             )
 
             logger.info(f"Updated setting {setting_id} for user {token.get('user_id')}")

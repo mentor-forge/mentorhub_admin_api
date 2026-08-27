@@ -1,6 +1,6 @@
 # F019 – README, e2e, and packaging pass
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F018_dev_parity_register`  
 **Description:** Align README and server startup logs with the Admin API surface, add black-box e2e coverage for operator REST and ingress, and run the full unit plus containerized e2e gate for this wave.
@@ -77,3 +77,19 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+1. **Documentation & Architecture Alignment:**
+   - Updated `README.md` with current state, full project layout, operator BFF surface, ingress listener surface, and comprehensive curl examples for all routes.
+   - Verified `src/server.py` registers and logs all active route blueprints.
+2. **E2E Test Coverage:**
+   - Created `test/e2e/test_operator_rest.py` with black-box integration tests for `/api/config`, `/api/setting` CRUD, `/api/event` list and create, `/api/external-event` list and source filter, and 401 unauthorized checks.
+   - Created `test/e2e/test_webhooks.py` with black-box integration tests for Stripe webhook ingress idempotency, Cognito Post Confirmation account provisioning, SMS webhook listener, Developer Edition self-serve registration (`/dev/register/primary` and `/dev/register/invite`), and 404 assertions on forbidden paths.
+3. **Verification Gate Results:**
+   - `pipenv run test`: 81 unit tests passed.
+   - `pipenv run lint`: Black format check clean.
+   - `pipenv run build`: Compilation succeeded.
+   - `pipenv run container`: Docker container built successfully.
+   - `pipenv run api`: Microservice containers restarted and healthy.
+   - `pipenv run e2e`: 10 E2E integration tests passed.
+   - Zero forbidden pattern greps (`execute_infinite_scroll_query`, `next_cursor`, `access_token`, `id_token` in routes).
+   - OpenAPI spec verified at `http://localhost:8389/docs/openapi.yaml` (contains `/api/setting`, `/api/event`, `/api/external-event`; strictly excludes webhook, dev, profile, customer endpoints).
