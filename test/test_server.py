@@ -102,6 +102,7 @@ class TestAppConfiguration(unittest.TestCase):
         self.assertTrue(any("/api/config" in rule for rule in rules))
         self.assertTrue(any("/api/event" in rule for rule in rules))
         self.assertTrue(any("/api/external-event" in rule for rule in rules))
+        self.assertTrue(any("/api/setting" in rule for rule in rules))
         self.assertFalse(
             any(_FORBIDDEN_CREDENTIAL_ISSUER_PATH in rule for rule in rules)
         )

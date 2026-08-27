@@ -1,6 +1,6 @@
 # F015 – Setting control service and routes
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F014_ingress_event_layer`  
 **Description:** Admin **controls** Setting. There is no shared `SettingService` in api-utils 1.0.0. Add a local service and GET list (optional `type` filter), GET/PATCH by id, and POST create. All inbound writes and operator reads require `ROLE_ADMIN`.
@@ -75,3 +75,19 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+1. **Setting Service & Routes Implementation:**
+   - Implemented `src/services/setting_service.py` with `get_settings`, `get_setting`, `create_setting`, `update_setting`, enforcing `ROLE_ADMIN` RBAC.
+   - Defined `SETTING_LIST_FILTERS` (`type`, `name`, `status`) and `SETTING_LIST_ORDER`.
+   - Created `src/routes/setting_routes.py` with `GET ""`, `POST ""`, `GET /<setting_id>`, `PATCH /<setting_id>`.
+   - Registered `/api/setting` blueprint in `src/server.py` and updated logging.
+2. **Testing:**
+   - Created `test/services/test_setting_service.py` and `test/routes/test_setting_routes.py`.
+   - Updated `test/test_server.py` URL assertions.
+   - `pipenv run test`: All 44 tests passed.
+   - `pipenv run lint`: Black formatting check clean.
+   - `pipenv run build`: Clean compilation.
+3. **Packaging Verification:**
+   - `pipenv run container`: Docker image built.
+   - `pipenv run api`: API container restarted.
+   - Verified live `GET /api/setting` returned 200 with seeded Product and Discount settings.
