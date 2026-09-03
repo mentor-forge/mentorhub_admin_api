@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 WEBHOOK_SYSTEM_TOKEN = {
     "user_id": "webhook-ingress",
+    "display_name": "Webhook Ingress",
     "roles": ["admin"],
     "profile_id": "000000000000000000000000",
 }

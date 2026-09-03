@@ -13,6 +13,7 @@ from src.services.provisioning_service import ProvisioningService
 def admin_token():
     return {
         "user_id": "admin-user",
+        "display_name": "Admin User",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }
@@ -22,6 +23,7 @@ def admin_token():
 def non_admin_token():
     return {
         "user_id": "mentor-user",
+        "display_name": "Mentor User",
         "roles": ["mentor"],
         "profile_id": "507f1f77bcf86cd799439012",
     }

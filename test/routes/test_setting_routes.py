@@ -29,6 +29,7 @@ def client(app):
 def test_get_settings_route(mock_token, mock_breadcrumb, mock_get_settings, client):
     mock_token.return_value = {
         "user_id": "admin-user",
+        "display_name": "Admin User",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }
@@ -60,6 +61,7 @@ def test_get_settings_route(mock_token, mock_breadcrumb, mock_get_settings, clie
 def test_create_setting_route(mock_token, mock_breadcrumb, mock_create, client):
     mock_token.return_value = {
         "user_id": "admin-user",
+        "display_name": "Admin User",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }
@@ -87,6 +89,7 @@ def test_create_setting_route(mock_token, mock_breadcrumb, mock_create, client):
 def test_get_setting_by_id_route(mock_token, mock_breadcrumb, mock_get, client):
     mock_token.return_value = {
         "user_id": "admin-user",
+        "display_name": "Admin User",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }
@@ -114,6 +117,7 @@ def test_get_setting_by_id_route(mock_token, mock_breadcrumb, mock_get, client):
 def test_patch_setting_route(mock_token, mock_breadcrumb, mock_update, client):
     mock_token.return_value = {
         "user_id": "admin-user",
+        "display_name": "Admin User",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }
