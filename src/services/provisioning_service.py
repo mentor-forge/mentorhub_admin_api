@@ -113,7 +113,7 @@ class ProvisioningService:
             profile_roles = roles or ["admin", "member"]
             profile_data = {
                 "email": email,
-                "name": name or email.split("@")[0].replace(".", " ").title(),
+                "display_name": name or email.split("@")[0].replace(".", " ").title(),
                 "roles": profile_roles,
                 "customer_id": customer_data["_id"],
                 "status": "active",

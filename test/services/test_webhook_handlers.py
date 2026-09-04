@@ -13,6 +13,7 @@ from src.services.webhook_handlers import handle_cognito, handle_sms, handle_str
 def system_token():
     return {
         "user_id": "webhook-ingress",
+        "display_name": "Webhook Ingress",
         "roles": ["admin"],
         "profile_id": "000000000000000000000000",
     }

@@ -16,6 +16,7 @@ from src.services.ingress_service import (
 def admin_token():
     return {
         "user_id": "ingress",
+        "display_name": "Ingress",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }

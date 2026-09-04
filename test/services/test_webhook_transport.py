@@ -17,6 +17,8 @@ from src.services.webhook_transport import (
 def test_get_webhook_system_token():
     token = get_webhook_system_token()
     assert token["user_id"] == "webhook-ingress"
+    assert token["display_name"] == "Webhook Ingress"
+    assert "name" not in token
     assert "admin" in token["roles"]
 
 

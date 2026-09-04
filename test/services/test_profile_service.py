@@ -13,6 +13,7 @@ from src.services.profile_service import ProfileService
 def admin_token():
     return {
         "user_id": "admin-user",
+        "display_name": "Admin User",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }
@@ -22,6 +23,7 @@ def admin_token():
 def non_admin_token():
     return {
         "user_id": "regular-user",
+        "display_name": "Regular User",
         "roles": ["mentor"],
         "profile_id": "507f1f77bcf86cd799439012",
     }
@@ -56,10 +58,10 @@ def test_create_profile_allowed_for_admin(
     mock_mongo_instance.create_document.return_value = "507f1f77bcf86cd799439011"
     mock_mongo.return_value = mock_mongo_instance
 
-    data = {"name": "test-user", "email": "test@example.com"}
+    data = {"display_name": "Test User", "email": "test@example.com"}
     result = ProfileService.create_profile(data, admin_token, breadcrumb)
 
-    assert result["name"] == "test-user"
+    assert result["display_name"] == "Test User"
     assert result["_id"] == ObjectId("507f1f77bcf86cd799439011")
     assert result["created"] == breadcrumb
     assert result["saved"] == breadcrumb
@@ -67,7 +69,7 @@ def test_create_profile_allowed_for_admin(
 
 
 def test_create_profile_forbidden_for_non_admin(non_admin_token, breadcrumb):
-    data = {"name": "test-user", "email": "test@example.com"}
+    data = {"display_name": "Test User", "email": "test@example.com"}
     with pytest.raises(HTTPForbidden) as exc_info:
         ProfileService.create_profile(data, non_admin_token, breadcrumb)
     assert "Admin role required" in str(exc_info.value.message)
@@ -101,11 +103,11 @@ def test_get_profile(mock_config, mock_mongo, admin_token, breadcrumb):
     mock_mongo_instance = MagicMock()
     mock_mongo_instance.get_document.return_value = {
         "_id": ObjectId("507f1f77bcf86cd799439011"),
-        "name": "test-user",
+        "display_name": "Test User",
     }
     mock_mongo.return_value = mock_mongo_instance
 
     result = ProfileService.get_profile(
         "507f1f77bcf86cd799439011", admin_token, breadcrumb
     )
-    assert result["name"] == "test-user"
+    assert result["display_name"] == "Test User"

@@ -15,6 +15,7 @@ from src.services.identity_provisioning_service import (
 def admin_token():
     return {
         "user_id": "admin-user",
+        "display_name": "Admin User",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }
@@ -24,6 +25,7 @@ def admin_token():
 def non_admin_token():
     return {
         "user_id": "mentor-user",
+        "display_name": "Mentor User",
         "roles": ["mentor"],
         "profile_id": "507f1f77bcf86cd799439012",
     }
@@ -94,6 +96,10 @@ def test_provision_primary_success(
     assert result["profile"]["customer_id"] == ObjectId("507f1f77bcf86cd799439022")
     mock_create_cust.assert_called_once()
     mock_create_prof.assert_called_once()
+    profile_data = mock_create_prof.call_args.args[0]
+    assert profile_data["display_name"] == "Owner Name"
+    assert "name" not in profile_data
+    assert "full_name" not in profile_data
     mock_record_ingress.assert_called_once()
 
 
@@ -151,6 +157,10 @@ def test_provision_invitee_success(
     # Invitee does NOT create a Customer!
     mock_create_cust.assert_not_called()
     mock_create_prof.assert_called_once()
+    profile_data = mock_create_prof.call_args.args[0]
+    assert profile_data["display_name"] == "Member Name"
+    assert "name" not in profile_data
+    assert "full_name" not in profile_data
 
 
 def test_provision_primary_forbidden_for_non_admin(non_admin_token, breadcrumb):

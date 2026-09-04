@@ -13,6 +13,7 @@ from src.services.event_service import EventService
 def admin_token():
     return {
         "user_id": "admin-user",
+        "display_name": "Admin User",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }
@@ -22,6 +23,7 @@ def admin_token():
 def non_admin_token():
     return {
         "user_id": "regular-user",
+        "display_name": "Regular User",
         "roles": ["mentor"],
         "profile_id": "507f1f77bcf86cd799439012",
     }
@@ -59,6 +61,8 @@ def test_create_event_allowed_for_admin(
     assert result["created"] == breadcrumb
     assert result["context"]["profile_id"] == ObjectId("507f1f77bcf86cd799439011")
     assert result["context"]["user_id"] == "admin-user"
+    assert result["context"]["display_name"] == "Admin User"
+    assert "name" not in result["context"]
     mock_mongo_instance.create_document.assert_called_once()
 
 

@@ -31,6 +31,7 @@ def client(app):
 def test_get_external_events_list(mock_token, mock_breadcrumb, mock_get_events, client):
     mock_token.return_value = {
         "user_id": "admin-user",
+        "display_name": "Admin User",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }

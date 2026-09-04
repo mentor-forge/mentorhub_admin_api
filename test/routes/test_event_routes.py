@@ -30,6 +30,7 @@ def client(app):
 def test_create_event_success(mock_token, mock_breadcrumb, mock_create, client):
     mock_token.return_value = {
         "user_id": "admin-user",
+        "display_name": "Admin User",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }
@@ -59,6 +60,7 @@ def test_create_event_success(mock_token, mock_breadcrumb, mock_create, client):
 def test_create_event_forbidden(mock_token, mock_breadcrumb, mock_create, client):
     mock_token.return_value = {
         "user_id": "user",
+        "display_name": "User",
         "roles": ["mentor"],
         "profile_id": "507f1f77bcf86cd799439012",
     }
@@ -80,6 +82,7 @@ def test_create_event_forbidden(mock_token, mock_breadcrumb, mock_create, client
 def test_get_events_list(mock_get_events, mock_token, mock_breadcrumb, client):
     mock_token.return_value = {
         "user_id": "admin-user",
+        "display_name": "Admin User",
         "roles": ["admin"],
         "profile_id": "507f1f77bcf86cd799439011",
     }
