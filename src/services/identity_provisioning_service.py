@@ -99,17 +99,14 @@ class IdentityProvisioningService:
             if not filtered_roles:
                 filtered_roles = ["admin"]
 
-            # Derive username from email (no whitespace, max 40)
-            username = email.split("@")[0].replace(" ", "_")[:40]
             profile_data = {
                 "email": email,
-                "name": username,
                 "roles": filtered_roles,
                 "customer_id": customer_doc["_id"],
                 "status": "provisioned",
             }
             if name:
-                profile_data["full_name"] = str(name)[:255]
+                profile_data["display_name"] = str(name)[:255]
             if external_ids and "sub" in external_ids:
                 profile_data["cognito_sub"] = str(external_ids["sub"])[:40]
 
@@ -222,16 +219,14 @@ class IdentityProvisioningService:
             if not filtered_roles:
                 filtered_roles = ["mentee"]
 
-            username = email.split("@")[0].replace(" ", "_")[:40]
             profile_data = {
                 "email": email,
-                "name": username,
                 "roles": filtered_roles,
                 "customer_id": ObjectId(str(customer_id)),
                 "status": "provisioned",
             }
             if name:
-                profile_data["full_name"] = str(name)[:255]
+                profile_data["display_name"] = str(name)[:255]
             if external_ids and "sub" in external_ids:
                 profile_data["cognito_sub"] = str(external_ids["sub"])[:40]
 

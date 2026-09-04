@@ -29,8 +29,7 @@ def test_register_primary_success(mock_provision, client):
         "profile": {
             "_id": ObjectId("507f1f77bcf86cd799439011"),
             "email": "dev.owner@example.com",
-            "name": "dev.owner",
-            "full_name": "Dev Owner",
+            "display_name": "Dev Owner",
             "roles": ["admin"],
             "status": "provisioned",
         },
@@ -71,8 +70,7 @@ def test_register_invite_success(mock_provision, client):
         "profile": {
             "_id": ObjectId("507f1f77bcf86cd799439011"),
             "email": "dev.member@example.com",
-            "name": "dev.member",
-            "full_name": "Dev Member",
+            "display_name": "Dev Member",
             "roles": ["mentee"],
             "status": "provisioned",
         },
