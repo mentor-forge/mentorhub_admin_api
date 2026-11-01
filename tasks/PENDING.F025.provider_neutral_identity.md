@@ -1,4 +1,4 @@
-# F025 – Implement the approved non-AWS identity ingress transition
+# F025 – Isolate Admin backing-service integration from cloud configuration
 
 **Status**: Pending
 
@@ -43,20 +43,17 @@ Source issue is authoritative for this migration. The agreed migration supersede
 
 ## Goals
 
-- Gate implementation on the central identity decision: authentication/signing, provider event envelope, claims, registration/invites, identity mapping, legacy cognito_sub and rollback must be recorded. Do not infer schemas from sibling files; require live authoritative API/configurator contracts if changing persisted shapes.
-- Replace active Cognito-specific ingress/provisioning dependency with the approved non-AWS contract in existing webhook/dev-register/service boundaries. Retain historical Cognito identifiers/audit entries for compatibility and do not rewrite data or invent new MongoDB enum values.
-- Preserve idempotent primary/invitee provisioning, tenant scoping, privileged ingress checks, Stripe/SMS behavior and provider-neutral JWT validation. Development-only registration must stay disabled in production; local parity is not a production IdP.
-- If the decision needs schema changes in excluded utility repos or new adapter/output files, stop and request a scoped follow-on plan before proceeding; do not expand this task silently.
-
-### Craftsmanship Expectations
-
-Keep package, auth and deployment ownership in the existing shared modules. Preserve APIs and runtime contracts unless the recorded migration decision explicitly requires a change; remove obsolete AWS auth knowledge rather than duplicate it. Keep every dependency reference reproducible.
+- Audit the existing provisioning, webhook and dev-register paths to separate business operations from Cognito event-envelope/configuration assumptions. Most backing-service integration is placeholder code: change only demonstrated local AWS coupling, and record evidence when no implementation change is needed.
+- Keep provider-neutral primary/invitee provisioning, JWT validation, tenant/RBAC checks, idempotency and local registration parity in Admin. Allow backing services to be supplied through existing environment/configuration contracts; AWS endpoint/pool/client and deployment-specific mapping belong in CloudFormation configuration/overlays.
+- Preserve historical cognito_sub identifiers and event-source values for compatibility. Do not rename data fields/enums, introduce a new provider, rewrite persisted identities, or add speculative schema/API changes.
+- Keep optional provider-shaped webhook compatibility behind the existing integration boundary if it does not require AWS locally. Preserve Stripe/SMS behavior and ensure dev-only registration cannot become a production identity provider.
+- No production identity/hosting decision is a prerequisite. If inspection finds an actual missing backing-service contract, document a narrowly scoped follow-on for review rather than build a generic adapter framework.
 
 ## Testing Expectations
 
-These checks are for future execution; none were run while creating this plan.
-
-- External prerequisite: approved I-WE01 identity contract, non-AWS provider/test environment and any needed live schema verification. Test primary/invitee idempotency, source event mapping, invalid signature/auth, role/tenant denial, historic identifiers and production dev-route exclusion. Run pipenv run test/lint/build and mandatory container → api → e2e gate; no production data migration.
+- During future execution, use existing local/mock backing services to verify primary/invitee idempotency, permissions and tenant denial, webhook input mapping, historical identifiers and dev-mode boundaries without AWS credentials or service calls.
+- Run pipenv run test/lint/build and the existing container → api → e2e packaging gate. Do not require a new IdP, live production migration or schema change to complete local integration isolation.
+- Record which source files actually needed edits; do not churn placeholder implementations merely to remove a historical provider name.
 
 ## Outputs
 
@@ -81,11 +78,21 @@ Only these implementation files may change. The orchestrator may also update/ren
 
 This is a reviewable plan, not an execution record. Execute only this task's listed outputs when orchestration is separately authorized. Do not touch excluded MongoDB/Runbook utility repos, publish packages/tags, mutate issue/project state, or delete/provision AWS resources as a side effect. Future workflow publication happens only through the reviewed maintainer release path.
 
-Where a task requires an unpublished release, an undecided production contract, unavailable live schema or operator evidence, stop execution at that prerequisite and report it; do not guess values or substitute the unrelated PyPI api-utils package. Pending status describes the plan's review state, not proof that external execution gates are satisfied.
+Where a task requires an unpublished release, unavailable live schema or operator evidence, stop execution at that prerequisite and report it; do not guess values or substitute the unrelated PyPI api-utils package. Pending status describes the plan's review state, not proof that external execution gates are satisfied.
 
 ## External prerequisites
 
-API utils release and verified wheel URL/hash: https://github.com/mentor-forge/mentorhub_api_utils/issues/36. Production identity/hosting decisions and cutover readiness: https://github.com/mentor-forge/mentorhub/issues/80. These are execution gates, not local task dependencies. No excluded utility-repo changes are authorized.
+API utils release and verified wheel URL/hash: https://github.com/mentor-forge/mentorhub_api_utils/issues/36. Cloud-agnostic local configuration and integration boundary: https://github.com/mentor-forge/mentorhub/issues/80. No production identity/hosting decision blocks this package/build work. These are execution gates, not local task dependencies. No excluded utility-repo changes are authorized.
+
+## Cloud-agnostic deployment boundary
+
+The deliverable is a cloud-agnostic **local** deployment plus the agreed GitHub dependency/build migration. Existing identity/hosting implementations are largely placeholders: audit actual executable dependencies before proposing changes. Selecting, implementing or migrating to a production IdP/hosting provider is not a prerequisite for library releases, journey package/build/CI changes or local acceptance.
+
+Keep application-facing backing-service contracts and environment settings provider neutral. Concentrate necessary integration changes in Admin API and DeveloperEdition/docker-compose.yaml where inspection proves coupling; preserve the existing shared JWT/redirect contracts and local persona/mocked-service behavior. Do not create per-journey provider adapters, new identity schemas or a general multi-cloud framework speculatively.
+
+Cloud-specific provisioning, backing-service configuration, identity-provider wiring, roles/secrets and deployment overlays belong to the relevant infrastructure repo: mentorhub_cloudformation owns AWS, including future CodeArtifact provisioning. Future separate repos may implement Google, Microsoft/Azure, IBM or Red Hat platforms against the same contracts; do not create or implement them in this effort. Core compose must not require AWS accounts, credentials or endpoints. A locally optional emulator is not a live AWS dependency; retain it only if useful without making it a required cloud-specific integration.
+
+AWS inventory, secure backup/restore evidence and separately approved decommissioning remain I-S01 responsibilities. Production provider selection or a live production cutover is future infrastructure/integration work, not an acceptance gate for the cloud-agnostic local stack.
 
 ## Execution Notes
 
