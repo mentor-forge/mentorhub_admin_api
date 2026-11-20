@@ -1,6 +1,6 @@
 # F022 – Migrate API dependency source and locking to a Release wheel
 
-**Status**: Pending
+**Status**: Shipped
 
 **Type**: Feature
 
@@ -82,4 +82,8 @@ AWS inventory, secure backup/restore evidence and separately approved decommissi
 
 ## Execution Notes
 
-Reserved for the execution agent. No implementation, tests, service changes or publication have been performed.
+Replaced the CodeArtifact index with public PyPI and pinned API Utils 1.0.5 to its public GitHub wheel. Pipenv does not emit a separate hash for a direct wheel URL, so its URL includes the SHA-256 digest verified against the published checksum. The regenerated lockfile and hashed requirements export preserve that URL and digest.
+
+Removed the two AWS shell wrappers. `pipenv run install` now runs `pipenv sync --dev`, and `pipenv lock` regenerates the lockfile. Updated the E2E token fixture to send the current `display_name` JWT claim.
+
+Verified the wheel download checksum, lock and requirements export, clean Python 3.12 install and repeated sync, installed wheel origin, checksum and version, Config/MongoIO and token exports, and token role/profile/customer/mentor claim mapping. With AWS profile and credential environment variables unset, 81 non-E2E tests, Black lint, and Python compilation passed. Container, runtime, and E2E verification follows the Docker migration.

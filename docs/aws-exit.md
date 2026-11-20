@@ -25,3 +25,9 @@ The inbound Cognito route in `src/routes/webhook_routes.py` authenticates callba
 `src/services/identity_provisioning_service.py` consumes normalized identity inputs and preserves an external subject in the existing `cognito_sub` field when provided. The development registration routes call the same provisioning entry points and use the historical Cognito source label. The label is stored compatibility data. `ProvisioningService` and `IngressService` likewise use application contracts and shared MongoIO access. Preserve compatibility, authorization, and idempotency. Keep infrastructure-specific configuration in CloudFormation. A production identity provider decision is outside this migration.
 
 API Utils 1.0.5 maps JWT `sub` to `user_id`, requires `profile_id`, carries roles and optional `customer_id` and `mentor_id`, and exposes `display_name` from that JWT claim with an `unknown` fallback. Admin already supplies a display label on the synthetic webhook token. F022 should check the installed wheel against Admin's shared token, list/GET and MongoIO call sites and align persona fixtures where needed. Preserve service authorization, MongoIO-only data access, persisted document fields, and the OpenAPI contract.
+
+## Installing the pinned wheel
+
+Run `pipenv run install` to sync production and development dependencies from the committed lockfile. Run `pipenv lock` when intentionally updating a dependency, then review the resulting lock changes. PyPI serves third-party packages. Admin API installs API Utils 1.0.5 directly from its public GitHub Release wheel. The wheel URL in the Pipfile, lockfile, and requirements export includes the verified published SHA-256 digest. Neither installation nor lock generation needs registry credentials.
+
+The local E2E token fixture supplies the signed `display_name` and existing admin role and profile claims. Admin’s application token, shared list/GET helpers, and MongoIO contracts are unchanged.
