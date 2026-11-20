@@ -31,3 +31,7 @@ API Utils 1.0.5 maps JWT `sub` to `user_id`, requires `profile_id`, carries role
 Run `pipenv run install` to sync production and development dependencies from the committed lockfile. Run `pipenv lock` when intentionally updating a dependency, then review the resulting lock changes. PyPI serves third-party packages. Admin API installs API Utils 1.0.5 directly from its public GitHub Release wheel. The wheel URL in the Pipfile, lockfile, and requirements export includes the verified published SHA-256 digest. Neither installation nor lock generation needs registry credentials.
 
 The local E2E token fixture supplies the signed `display_name` and existing admin role and profile claims. Admin’s application token, shared list/GET helpers, and MongoIO contracts are unchanged.
+
+## Building the Admin API image
+
+Run `pipenv run container` to build the usual local GHCR-tagged image. Set `ADMIN_API_IMAGE` to a separate local tag during validation so the standard tag stays available to Developer Edition. The build exports the production requirements from the committed lock, including package hashes and the direct wheel URL. It installs them from public sources with hash checking enabled. Gunicorn remains the image's separate runtime install. The build requires neither AWS nor GitHub credentials.

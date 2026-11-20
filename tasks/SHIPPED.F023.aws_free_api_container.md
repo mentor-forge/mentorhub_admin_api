@@ -1,6 +1,6 @@
 # F023 – Remove AWS auth from API Docker builds
 
-**Status**: Pending
+**Status**: Shipped
 
 **Type**: Feature
 
@@ -76,4 +76,7 @@ AWS inventory, secure backup/restore evidence and separately approved decommissi
 
 ## Execution Notes
 
-Reserved for the execution agent. No implementation, tests, service changes or publication have been performed.
+- The Docker build now uses `pipenv requirements --hash` and pip hash enforcement for committed application dependencies. The Docker helper delegates to Docker without registry authentication. Its default image tag is unchanged and an optional `ADMIN_API_IMAGE` override supports isolated local verification.
+- Built the ARM64 image with `pipenv run container` without AWS or GitHub credentials. Inspected the installed distribution's version and direct URL metadata and confirmed API Utils 1.0.5 and the published SHA-256 digest.
+- Verified the packaged Explorer page, OpenAPI document, and metrics endpoint. All 10 E2E tests passed, including authenticated configuration, operator data, unauthorized requests, local registration, and inbound webhook compatibility. Used the built image, MongoDB, and the existing schema seed image on a disposable network and ephemeral loopback port. The usual `pipenv run api` script stops the active Developer Edition stack, so the isolated equivalent was used here.
+- Shell syntax and diff checks passed. No images were pushed.
