@@ -1,6 +1,6 @@
 # F024 – Update API GitHub Actions for AWS-free validation and GHCR publishing
 
-**Status**: Pending
+**Status**: Shipped
 
 **Type**: Feature
 
@@ -75,4 +75,7 @@ AWS inventory, secure backup/restore evidence and separately approved decommissi
 
 ## Execution Notes
 
-Reserved for the execution agent. No implementation, tests, service changes or publication have been performed.
+- The push-to-main workflow retains AMD64 and ARM64 GHCR publication with only contents read and packages write. Removed AWS credentials, CodeArtifact lookup, private index build argument, and OIDC permissions.
+- Added read-only PR validation against main. Checkout credentials are disabled. CI verifies and syncs the lock, lints, tests, compiles, and builds a local image without registry login.
+- Validated YAML triggers, permissions, checkout settings, publishing platforms, and absence of AWS and private index workflow inputs. Local lock verification, lint, all 81 unit tests, compilation, and the ARM64 Docker build with no AWS or GitHub token environment passed.
+- Hosted PR CI is verified once the pull request runs. GHCR publication is verified from the push-to-main workflow after merge.

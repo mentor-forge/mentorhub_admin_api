@@ -35,3 +35,9 @@ The local E2E token fixture supplies the signed `display_name` and existing admi
 ## Building the Admin API image
 
 Run `pipenv run container` to build the usual local GHCR-tagged image. Set `ADMIN_API_IMAGE` to a separate local tag during validation so the standard tag stays available to Developer Edition. The build exports the production requirements from the committed lock, including package hashes and the direct wheel URL. It installs them from public sources with hash checking enabled. Gunicorn remains the image's separate runtime install. The build requires neither AWS nor GitHub credentials.
+
+## Continuous integration and publishing
+
+Pull requests targeting main run read-only validation with checkout credentials disabled. The workflow verifies the lockfile, installs its dependencies, runs lint and tests, compiles the application, and builds the container without registry login.
+
+The separate main-branch workflow builds and publishes the same AMD64 and ARM64 image to GHCR. Its permissions are limited to repository contents read and package write. The GitHub token authenticates the GHCR login step. The Docker build receives no registry credentials or private package index.
