@@ -1,0 +1,27 @@
+# Admin API AWS exit audit
+
+## Package delivery
+
+Admin currently pins API Utils 1.0.4 via CodeArtifact. The public API Utils 1.0.5 wheel downloaded without credentials and matched the published checksum.
+
+- Wheel: [api_utils-1.0.5-py3-none-any.whl](https://github.com/mentor-forge/mentorhub_api_utils/releases/download/v1.0.5/api_utils-1.0.5-py3-none-any.whl)
+- SHA-256: `79de3829e2baa294497e08925908645bcea53cdf497d02b6bed71322a503d952`
+
+Pin that exact wheel and its hash in the dependency lock. Resolve third-party dependencies through public PyPI. The similarly named PyPI package is unrelated. For future package rollbacks, restore a verified GitHub-hosted wheel pin and matching lockfile together. The rollback floor is 1.0.5.
+
+| Surface | Current coupling | Migration |
+| --- | --- | --- |
+| `Pipfile`, `Pipfile.lock`, `scripts/pipenv-install.sh`, `scripts/pipenv-lock.sh` | CodeArtifact index, AWS CLI endpoint and token lookup, temporary requirements export | F022 locks the published wheel and public dependencies, preserving the install entry point with standard Pipenv commands. |
+| `Dockerfile`, `scripts/docker-build.sh` | Authenticated package index passed as a build argument | F023 builds from the checked-in lock with the public wheel and retains the local container build entry point. |
+| `.github/workflows/docker-push.yml` | AWS role assumption, CodeArtifact token, and build index argument | F024 removes AWS authentication and adds read-only PR validation while retaining GHCR publication on main. |
+| `README.md`, `tasks/_PLANNING.md` | Active install instructions reference the old registry | F026 updates usage and records repo-local acceptance. |
+
+The blocked F020 task is a historical CodeArtifact upgrade to 1.0.1. The current pin has already moved to 1.0.4. The checkout already includes the webhook system token's display label and writes `display_name` for provisioned Profiles where supplied. Retest the previous ingress failures as part of F025/F026 before drawing conclusions about live validation. Leave F020's historical record intact.
+
+## Identity and runtime
+
+The inbound Cognito route in `src/routes/webhook_routes.py` authenticates callbacks using the configured shared secret and passes the payload to `handle_cognito` in `src/services/webhook_handlers.py`. PostConfirmation dispatches primary or invitee provisioning. Other Cognito events can be recorded through `IngressService`. These paths interpret incoming events and do not make outbound AWS SDK calls.
+
+`src/services/identity_provisioning_service.py` consumes normalized identity inputs and preserves an external subject in the existing `cognito_sub` field when provided. The development registration routes call the same provisioning entry points and use the historical Cognito source label. The label is stored compatibility data. `ProvisioningService` and `IngressService` likewise use application contracts and shared MongoIO access. Preserve compatibility, authorization, and idempotency. Keep infrastructure-specific configuration in CloudFormation. A production identity provider decision is outside this migration.
+
+API Utils 1.0.5 maps JWT `sub` to `user_id`, requires `profile_id`, carries roles and optional `customer_id` and `mentor_id`, and exposes `display_name` from that JWT claim with an `unknown` fallback. Admin already supplies a display label on the synthetic webhook token. F022 should check the installed wheel against Admin's shared token, list/GET and MongoIO call sites and align persona fixtures where needed. Preserve service authorization, MongoIO-only data access, persisted document fields, and the OpenAPI contract.
