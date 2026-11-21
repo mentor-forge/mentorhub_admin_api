@@ -1,6 +1,6 @@
 # F026 – Finalize API migration documentation and runtime acceptance
 
-**Status**: Pending
+**Status**: Shipped
 
 **Type**: Feature
 
@@ -74,4 +74,7 @@ AWS inventory, secure backup/restore evidence and separately approved decommissi
 
 ## Execution Notes
 
-Reserved for the execution agent. No implementation, tests, service changes or publication have been performed.
+- Updated onboarding and the dependency section of the planning guide for the public PyPI and verified API Utils 1.0.5 wheel lock. Recorded the rollback floor and deployment-owned identity checks in `docs/aws-exit.md`.
+- Passed lock verification and a clean Python 3.12 install. Installed distribution metadata confirmed the wheel URL and SHA-256. All 81 unit tests, Black lint, and compilation passed.
+- Built the local ARM64 image without AWS or GitHub credentials and confirmed the pinned wheel inside it. All 10 E2E tests passed against the packaged image with disposable seeded MongoDB, covering operator claims and authorization, ingress, and registration replay. Used isolated startup in place of `pipenv run api` to avoid stopping Developer Edition. Cleaned up all disposable Docker resources.
+- Hosted PR CI and post-merge GHCR publishing need their GitHub workflow runs. No production integration or data migration was attempted.

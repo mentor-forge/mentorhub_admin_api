@@ -63,7 +63,7 @@ Each task file must contain the following sections under H1 and H2 headings.
   - Can include changing existing tests because of modified features.
   - Should always include a description of the tests that should be used to verify completion.
   - In this repo, that typically means some combination of:
-    - `pipenv run install` — refresh dependencies after `Pipfile` / lockfile changes (CodeArtifact auth; run `mh` first if needed)
+    - `pipenv run install` — sync production and development dependencies from the committed lockfile
     - `pipenv run test` — unit tests (pytest, excludes `@pytest.mark.e2e`)
     - `pipenv run lint` — format check (`black --check`)
     - `pipenv run build` — compile Python sources
@@ -120,13 +120,13 @@ If the configurator is unavailable, set the task **Status** to `Blocked` and sto
 
 ## Dependency management
 
-Domain APIs resolve `api-utils` and other packages from **AWS CodeArtifact**. When a task bumps or adds dependencies in `Pipfile` / `Pipfile.lock`, the execution agent must install them with:
+Admin API resolves third-party packages from public PyPI and pins API Utils to an exact public GitHub Release wheel URL with its verified SHA-256. The similarly named PyPI distribution is unrelated. When changing dependencies, run `pipenv lock`, review the wheel URL and digest in the regenerated lockfile, and sync it with:
 
 ```bash
 pipenv run install
 ```
 
-Do **not** use bare `pipenv install` or `pipenv install --dev` in task instructions — those skip the repo’s CodeArtifact auth wrapper (`scripts/pipenv-install.sh`). Run `mh` once per shell session before `pipenv run install` if CodeArtifact credentials are not already available (see `README.md` and `../mentorhub/DeveloperEdition/standards/api_standards.md`).
+Install and build commands need no package registry login. See [migration and verification notes](../docs/aws-exit.md) for the pin and rollback policy.
 
 Task **Testing Expectations** and **Goals** should call out `pipenv run install` whenever `Pipfile` or `Pipfile.lock` changes.
 
