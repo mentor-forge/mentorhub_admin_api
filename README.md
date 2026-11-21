@@ -4,7 +4,7 @@
 Guidance for LLM Code Assistants - NOTE: We are currently pre-release. At this time, no changes should consider backward compatibility. Likewise, while we anticipate versioning releases in the future at this point, no consideration should be given to bumping any versions beyond managing the internal api_utils spa_utils dependencies. We are in a rapid iteration phase where features can be deprecated and removed without pause. When working in this repo we should keep our eyes out for potential re-usable code that could be migrated to api_utils. This code should be implemented locally, and issues opened in the api_utils repo when it is time to migrate code.
 
 The Admin API microservice serves two distinct roles:
-1. **Admin SPA Operator BFF (`/api/*`)**: Controlled CRUD for system Settings (`/api/setting`), Event publishing and querying (`/api/event`), and read-only audit log queries for external events (`/api/external-event`). Enforces `ROLE_ADMIN` RBAC and adheres to the OpenAPI 3.0.3 specification (`docs/openapi.yaml`). Pinned to `api-utils==1.0.3` (JSON-array list GETs, `offset`/`size` headers, no cursor envelope). Flask token dicts from `create_flask_token()` use `display_name` (not `name`) for the human-readable identity.
+1. **Admin SPA Operator BFF (`/api/*`)**: Controlled CRUD for system Settings (`/api/setting`), Event publishing and querying (`/api/event`), and read-only audit log queries for external events (`/api/external-event`). Enforces `ROLE_ADMIN` RBAC and adheres to the OpenAPI 3.0.3 specification (`docs/openapi.yaml`). Pinned to the API Utils 1.0.5 GitHub Release wheel (JSON-array list GETs, `offset`/`size` headers, no cursor envelope). Flask token dicts from `create_flask_token()` use `display_name` (not `name`) for the human-readable identity.
 2. **Provider & Process Ingress Listeners (`/webhooks/*`, `/dev/register/*`)**: Transport listeners mounted on the server process (excluded from SPA OpenAPI docs). Normalizes and records incoming Stripe, Cognito, and SMS events via `IngressService`, and coordinates initial account provisioning (Customer organization and owner Profile) via `IdentityProvisioningService`. Does not enrich Customers or mint JWTs directly.
 
 ## Prerequisites
@@ -13,12 +13,14 @@ The Admin API microservice serves two distinct roles:
 
 ## Developer Commands
 
+Run `pipenv run install` to sync production and development dependencies from the committed lockfile. Third-party packages come from public PyPI. API Utils comes from an exact GitHub Release wheel URL with its verified SHA-256 pin. Installation and container builds require no package registry credentials. Use `pipenv lock` when changing dependencies and review the resulting lockfile. See the [migration and verification notes](./docs/aws-exit.md) for the wheel pin and rollback guidance.
+
 ```bash
-## Install dependencies (run `mh` first for CodeArtifact auth)
+## Install locked dependencies
 pipenv run install
 
 # start backing db container
-# Container Related commands use `de down` before starting the requested containers
+# The db, api, and service commands stop the active Developer Edition profile before starting the requested one.
 pipenv run db
 
 ## run unit tests
@@ -75,6 +77,7 @@ pipenv run lint
 
 - `docs/`
   - `openapi.yaml` - OpenAPI 3.0.3 specification for the Admin SPA REST surface
+  - `aws-exit.md` - Dependency delivery, container builds, CI, and local identity verification
 
 - `test/` - Test suite:
   - `test_server.py` - Server initialization, route registration, and signal handling tests

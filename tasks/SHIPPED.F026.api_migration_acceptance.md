@@ -1,0 +1,80 @@
+# F026 – Finalize API migration documentation and runtime acceptance
+
+**Status**: Shipped
+
+**Type**: Feature
+
+**Depends On**: F025
+
+**Description**: Remove AWS dependencies and migrate builds/packages off CodeArtifact — finalize api migration documentation and runtime acceptance.
+
+**Issue**: [I-AA01](https://github.com/mentor-forge/mentorhub_admin_api/issues/12)
+
+## Path anchoring
+
+All output paths are relative to this repository root. Sibling references are read-only context permitted by the repo planning guide.
+
+## Context
+
+- `README.md`
+- `tasks/_PLANNING.md`
+- `tasks/_ORCHESTRATE.md`
+- `../mentorhub/DeveloperEdition/standards/ArchitecturePrinciples.md`
+- `../mentorhub/DeveloperEdition/standards/sre_standards.md`
+- `../mentorhub/DeveloperEdition/standards/api_standards.md`
+- `../mentorhub_api_utils/README.md`
+- `../mentorhub_api_utils/api_utils/flask_utils/token.py`
+- `../mentorhub_api_utils/api_utils/mongo_utils/mongo_io.py`
+
+Source issue is authoritative for this migration. The agreed migration supersedes old CodeArtifact-auth prerequisites only in the paths explicitly migrated by these tasks; do not rewrite unrelated framework rules.
+
+## Goals
+
+- Update active README and only dependency instructions in tasks/_PLANNING.md to match pipenv run install, exact wheel URL/lock policy and AWS-free Docker/CI. Record external upstream pin readiness and rollback.
+- Record proof that existing local Admin provisioning/integration works without live AWS; preserve historical Cognito records and document remaining manual identity/data gates.
+- Record complete clean-install, test, Docker and CI acceptance; tests must use the selected library version and current display_name/tenant claims. Only this repo is modified. Do not execute other pending features or change issue/project state.
+
+### Craftsmanship Expectations
+
+Keep package, auth and deployment ownership in the existing shared modules. Preserve APIs and runtime contracts unless the recorded migration decision explicitly requires a change; remove obsolete AWS auth knowledge rather than duplicate it. Keep every dependency reference reproducible.
+
+## Testing Expectations
+
+These checks are for future execution; none were run while creating this plan.
+
+- pipenv run install, pipenv run test, pipenv run lint, pipenv run build and pipenv run container && pipenv run api && pipenv run e2e. Verify least-privileged/invalid tokens still fail and positive flows work without AWS. Cloud-specific production integration/configuration is infrastructure-owned future work and does not block local acceptance.
+
+## Outputs
+
+- `README.md`
+- `tasks/_PLANNING.md`
+- `docs/aws-exit.md`
+
+Only these implementation files may change. The orchestrator may also update/rename this task record under the established lifecycle.
+
+## Execution boundary
+
+This is a reviewable plan, not an execution record. Execute only this task's listed outputs when orchestration is separately authorized. Do not touch excluded MongoDB/Runbook utility repos, publish packages/tags, mutate issue/project state, or delete/provision AWS resources as a side effect. Future workflow publication happens only through the reviewed maintainer release path.
+
+Where a task requires an unpublished release, unavailable live schema or operator evidence, stop execution at that prerequisite and report it; do not guess values or substitute the unrelated PyPI api-utils package. Pending status describes the plan's review state, not proof that external execution gates are satisfied.
+
+## External prerequisites
+
+API utils release and verified wheel URL/hash: https://github.com/mentor-forge/mentorhub_api_utils/issues/36. Cloud-agnostic local configuration and integration boundary: https://github.com/mentor-forge/mentorhub/issues/80. No production identity/hosting decision blocks this package/build work. These are execution gates, not local task dependencies. No excluded utility-repo changes are authorized.
+
+## Cloud-agnostic deployment boundary
+
+The deliverable is a cloud-agnostic **local** deployment plus the agreed GitHub dependency/build migration. Existing identity/hosting implementations are largely placeholders: audit actual executable dependencies before proposing changes. Selecting, implementing or migrating to a production IdP/hosting provider is not a prerequisite for library releases, journey package/build/CI changes or local acceptance.
+
+Keep application-facing backing-service contracts and environment settings provider neutral. Concentrate necessary integration changes in Admin API and DeveloperEdition/docker-compose.yaml where inspection proves coupling; preserve the existing shared JWT/redirect contracts and local persona/mocked-service behavior. Do not create per-journey provider adapters, new identity schemas or a general multi-cloud framework speculatively.
+
+Cloud-specific provisioning, backing-service configuration, identity-provider wiring, roles/secrets and deployment overlays belong to the relevant infrastructure repo: mentorhub_cloudformation owns AWS, including future CodeArtifact provisioning. Future separate repos may implement Google, Microsoft/Azure, IBM or Red Hat platforms against the same contracts; do not create or implement them in this effort. Core compose must not require AWS accounts, credentials or endpoints. A locally optional emulator is not a live AWS dependency; retain it only if useful without making it a required cloud-specific integration.
+
+AWS inventory, secure backup/restore evidence and separately approved decommissioning remain I-S01 responsibilities. Production provider selection or a live production cutover is future infrastructure/integration work, not an acceptance gate for the cloud-agnostic local stack.
+
+## Execution Notes
+
+- Updated onboarding and the dependency section of the planning guide for the public PyPI and verified API Utils 1.0.5 wheel lock. Recorded the rollback floor and deployment-owned identity checks in `docs/aws-exit.md`.
+- Passed lock verification and a clean Python 3.12 install. Installed distribution metadata confirmed the wheel URL and SHA-256. All 81 unit tests, Black lint, and compilation passed.
+- Built the local ARM64 image without AWS or GitHub credentials and confirmed the pinned wheel inside it. All 10 E2E tests passed against the packaged image with disposable seeded MongoDB, covering operator claims and authorization, ingress, and registration replay. Used isolated startup in place of `pipenv run api` to avoid stopping Developer Edition. Cleaned up all disposable Docker resources.
+- Hosted PR CI and post-merge GHCR publishing need their GitHub workflow runs. No production integration or data migration was attempted.
