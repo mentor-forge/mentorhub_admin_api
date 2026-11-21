@@ -104,6 +104,12 @@ def test_e2e_dev_registration_endpoints():
     assert "jwt" not in primary_data
 
     customer_id = primary_data["customer"]["_id"]
+    replay = requests.post(
+        f"{BASE_URL}/dev/register/primary", json=primary_payload, timeout=5
+    )
+    assert replay.status_code == 201
+    assert replay.json()["idempotent"] is True
+    assert replay.json()["customer"]["_id"] == customer_id
 
     # Invitee registration under created customer
     invitee_email = f"dev_invitee_{uuid.uuid4().hex[:8]}@example.com"
@@ -121,6 +127,12 @@ def test_e2e_dev_registration_endpoints():
     assert invite_data["profile"]["email"] == invitee_email
     assert invite_data["profile"]["customer_id"] == customer_id
     assert "token" not in invite_data
+    replay = requests.post(
+        f"{BASE_URL}/dev/register/invite", json=invitee_payload, timeout=5
+    )
+    assert replay.status_code == 201
+    assert replay.json()["idempotent"] is True
+    assert replay.json()["profile"]["_id"] == invite_data["profile"]["_id"]
 
 
 @pytest.mark.e2e

@@ -1,6 +1,6 @@
 # F025 – Isolate Admin backing-service integration from cloud configuration
 
-**Status**: Pending
+**Status**: Shipped
 
 **Type**: Feature
 
@@ -96,4 +96,7 @@ AWS inventory, secure backup/restore evidence and separately approved decommissi
 
 ## Execution Notes
 
-Reserved for the execution agent. No implementation, tests, service changes or publication have been performed.
+- Audited all listed runtime paths. Cognito dispatch is inbound event mapping over the same primary and invitee operations used by Developer Edition. Admin uses the existing MongoIO persistence and authorization contracts. No outbound provider dependency was found; all runtime source files and data contracts are unchanged.
+- Added coverage for persistence of the historical Cognito subject and for repeat primary and invitee registrations returning the existing records.
+- All 81 unit tests, Black lint, compilation, and all 10 E2E tests passed. Built the ARM64 image without registry credentials and used it with seeded MongoDB on a disposable network and loopback port. The standard `pipenv run api` stops the active Developer Edition stack, so the isolated equivalent was used. It was cleaned up after testing.
+- Production Admin deployments must explicitly disable development registration. The current Developer Edition Compose profile relies on Admin's existing enabled default. A default-deny change requires coordinating an explicit Admin opt-in with the umbrella repo.

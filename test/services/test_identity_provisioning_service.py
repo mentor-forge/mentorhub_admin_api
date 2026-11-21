@@ -98,6 +98,7 @@ def test_provision_primary_success(
     mock_create_prof.assert_called_once()
     profile_data = mock_create_prof.call_args.args[0]
     assert profile_data["display_name"] == "Owner Name"
+    assert profile_data["cognito_sub"] == "sub-123"
     assert "name" not in profile_data
     assert "full_name" not in profile_data
     mock_record_ingress.assert_called_once()

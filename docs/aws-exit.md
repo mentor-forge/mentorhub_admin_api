@@ -41,3 +41,9 @@ Run `pipenv run container` to build the usual local GHCR-tagged image. Set `ADMI
 Pull requests targeting main run read-only validation with checkout credentials disabled. The workflow verifies the lockfile, installs its dependencies, runs lint and tests, compiles the application, and builds the container without registry login.
 
 The separate main-branch workflow builds and publishes the same AMD64 and ARM64 image to GHCR. Its permissions are limited to repository contents read and package write. The GitHub token authenticates the GHCR login step. The Docker build receives no registry credentials or private package index.
+
+## Local identity boundary
+
+Admin handles incoming identity events and persists the resulting Profiles and Customers through MongoIO. Cognito PostConfirmation maps the incoming subject and organization or customer fields to the shared primary or invitee provisioning operations. Other callback events use the ingress audit path. The historical `cognito_sub` field and event source stay compatible with existing data. Stripe and SMS retain their existing verification and dispatch behavior.
+
+Developer Edition registration calls the same provisioning operations and returns the persisted records without minting JWTs. Outside trusted Developer Edition deployments, explicitly set `REGISTRATION_DEV_MODE=false` on Admin API to disable the development routes. Admin currently defaults this flag to enabled, and the umbrella Compose configuration relies on that default. Making the default disabled requires an explicit opt-in on the Admin service in Developer Edition Compose. Coordinate that follow-up with the umbrella repo. Production provider wiring and callback verification configuration belong to the infrastructure deployment.
